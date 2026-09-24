@@ -3,10 +3,20 @@
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 
+// Fonction pour générer un slug propre
+function generateSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Enlever les accents
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")
+    .substring(0, 80); // Limiter la longueur
+}
+
 export async function submitArticle(formData: FormData) {
   const supabase = await createClient();
 
-  // Vérifier l'authentification
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -18,7 +28,6 @@ export async function submitArticle(formData: FormData) {
   const title = formData.get("title") as string;
   const content = formData.get("content") as string;
 
-  // Validation basique
   if (!title || title.trim().length < 10) {
     return { error: "Le titre doit contenir au moins 10 caractères" };
   }
@@ -27,19 +36,25 @@ export async function submitArticle(formData: FormData) {
     return { error: "Le contenu doit contenir au moins 100 caractères" };
   }
 
-  // Générer un slug à partir du titre
-  const slug = title
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // Enlever les accents
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
+  // Générer un slug de base
+  let slug = generateSlug(title);
 
-  // Insérer l'article avec le statut 'pending' (en attente de modération)
+  // Vérifier l'unicité et ajouter un suffixe si nécessaire
+  const { data: existingArticle } = await supabase
+    .from("articles")
+    .select("slug")
+    .eq("slug", slug)
+    .single();
+
+  if (existingArticle) {
+    // Ajouter un timestamp uniquement si le slug existe déjà
+    slug = `${slug}-${Date.now()}`;
+  }
+
   const { error } = await supabase.from("articles").insert({
     title: title.trim(),
     content_md: content.trim(),
-    slug: `${slug}-${Date.now()}`, // Ajouter timestamp pour éviter les doublons
+    slug: slug,
     author_id: user.id,
     status: "pending",
   });
@@ -49,7 +64,6 @@ export async function submitArticle(formData: FormData) {
     return { error: "Erreur lors de la soumission de l'article" };
   }
 
-  // Revalider le cache pour afficher le nouvel article dans la liste
   revalidatePath("/dashboard");
 
   return { success: true };
