@@ -1,0 +1,57 @@
+Tu as raison de poser la question. On a construit beaucoup de "tuyaux" techniques sans toujours expliquer à quoi ils servent pour l'utilisateur final. Reprenons depuis le début.
+🎯 La vision du projet
+Plateforme Emploi 2026 = un espace où les demandeurs d'emploi français peuvent :
+
+    Trouver de l'information fiable (droits, allocations, démarches)
+    Lire des témoignages de pairs (pas des experts, des gens comme eux)
+    Prendre la parole sans jugement (partager leur parcours)
+    S'entraider (poser des questions, recevoir des retours)
+
+C'est l'opposé de Pôle Emploi / France Travail : pas institutionnel, pas vertical, horizontal et communautaire.
+🗺️ Feuille de route en 4 phases
+Phase 1 — Fondation (✅ quasi fait)
+Objectif : un site qui fonctionne, sécurisé, avec du contenu de qualité.
+
+    ✅ Authentification
+    ✅ Soumission d'articles + modération admin
+    ✅ Lecture publique des articles
+    ✅ SEO technique (sitemap, Schema.org, OG images)
+    ✅ Commentaires modérés
+    ⚠️ Manque : 5-10 articles de qualité pour lancer le site (rédigés par toi ou des bêta-testeurs)
+
+Pourquoi c'est important : sans contenu, pas de visiteurs. Sans SEO, pas de découverte.
+Phase 2 — Communauté (prochaine étape)
+Objectif : transformer les lecteurs en contributeurs.
+Fonctionnalités à construire :
+
+    Profils utilisateurs publics — chaque contributeur a une page avec ses articles, son parcours (anonymisable). Ça crée de la confiance et de l'identité.
+    Catégories / tags — "Droits & allocations", "CV & entretien", "Reconversion", "Témoignages", "Questions". Permet de naviguer par besoin.
+    Système de "Merci" (pas de vote) — au lieu d'un upvote/downvote froid, un bouton "Merci pour ce témoignage" qui montre la gratitude. Plus humain, moins compétitif. C'est ça l'intérêt : valoriser sans classer.
+    Newsletter hebdomadaire — récap des nouveaux articles. Fidélise l'audience (coût : 0€ avec Resend ou Brevo free tier).
+    Page "Poser une question" — un utilisateur pose une question, la communauté répond (modéré). Crée de l'engagement récurrent.
+
+Phase 3 — Confiance & Autorité
+Objectif : devenir une référence crédible.
+
+    Vérification des auteurs — badge "Parcours vérifié" pour les témoignages authentiques (sans exposer l'identité réelle).
+    Ressources officielles liées — chaque article sur les droits lie vers les sources officielles (legifrance, service-public.fr). Crée de la crédibilité SEO.
+    Partenariats — associations d'aide aux demandeurs d'emploi (Restos du Cœur, Secours Catholique, etc.) qui relaient le contenu.
+    Statistiques publiques — "X témoignages publiés", "Y personnes aidées ce mois". Transparence = confiance.
+
+Phase 4 — Impact mesurable
+Objectif : prouver que le site aide concrètement.
+
+    Enquêtes anonymes — "Avant/après lecture, comment vous sentez-vous ?"
+    Histoires de réussite — section dédiée aux personnes qui ont retrouvé un emploi grâce à la plateforme.
+    Open data — publier anonymement les stats (thèmes les plus lus, questions fréquentes) pour aider les pouvoirs publics.
+
+❓ Pourquoi j'ai proposé le système de vote
+Honnêtement, ce n'est pas prioritaire. Je l'ai proposé par réflexe technique. Ce qui compte vraiment pour ton projet, c'est :
+
+    La modération humaine (déjà en place) → évite le spam et la haine
+    La bienveillance → un bouton "Merci" vaut 100 upvotes
+    La qualité du contenu → 10 bons articles > 1000 commentaires
+
+Ma recommandation : oublie le vote pour l'instant. Concentrons-nous sur la Phase 2 avec les profils, catégories, et le bouton "Merci".
+Ma proposition concrète pour la suite
+Prochaine étape immédiate : construire la page Profils utilisateurs + les catégories/tags. C'est ce qui transforme un blog en communauté.

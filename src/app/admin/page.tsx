@@ -204,16 +204,16 @@ export default async function AdminPage() {
                         Sur l'article :{" "}
                         <Link
                           href={`/articles/${
-                            (comment.articles as any)?.slug || ""
+                            (comment as any).articles?.slug || ""
                           }`}
                           className="text-blue-600 hover:underline font-semibold"
                         >
-                          {(comment.articles as any)?.title ||
+                          {(comment as any).articles?.title ||
                             "Article inconnu"}
                         </Link>
                       </p>
                       <p className="text-sm text-gray-500">
-                        Par {(comment.profiles as any)?.username || "Anonyme"} •{" "}
+                        Par {(comment as any).profiles?.username || "Anonyme"} •{" "}
                         {new Date(comment.created_at).toLocaleDateString(
                           "fr-FR",
                           {
