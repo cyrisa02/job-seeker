@@ -1,7 +1,14 @@
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
-import { publishArticle, archiveArticle } from "./actions";
+import {
+  publishArticle,
+  archiveArticle,
+  approveComment,
+  rejectComment,
+} from "./actions";
 import Link from "next/link";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function AdminPage() {
   const supabase = await createClient();
@@ -24,6 +31,7 @@ export default async function AdminPage() {
     );
   }
 
+  // 1. Articles en attente
   const { data: pendingArticles } = await supabase
     .from("articles")
     .select(
@@ -32,6 +40,7 @@ export default async function AdminPage() {
     .eq("status", "pending")
     .order("created_at", { ascending: false });
 
+  // 2. Articles publiés
   const { data: publishedArticles } = await supabase
     .from("articles")
     .select(
@@ -39,6 +48,26 @@ export default async function AdminPage() {
     )
     .eq("status", "published")
     .order("created_at", { ascending: false });
+
+  // 3. Commentaires en attente (requête corrigée)
+
+  // 3. Commentaires en attente
+  const { data: pendingComments, error } = await supabase
+    .from("comments")
+    .select(
+      `
+    id,
+    content,
+    created_at,
+    article_id,
+    articles (id, title, slug)
+  `
+    )
+    .eq("status", "pending")
+    .order("created_at", { ascending: false });
+
+  console.log("PENDING COMMENTS ERROR:", error);
+  console.log("PENDING COMMENTS DATA:", pendingComments);
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -50,6 +79,7 @@ export default async function AdminPage() {
           </Link>
         </div>
 
+        {/* Articles en attente */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-4">
             Articles en attente ({pendingArticles?.length || 0})
@@ -115,7 +145,8 @@ export default async function AdminPage() {
           )}
         </section>
 
-        <section>
+        {/* Articles publiés */}
+        <section className="mb-12">
           <h2 className="text-2xl font-bold mb-4">
             Articles publiés ({publishedArticles?.length || 0})
           </h2>
@@ -152,6 +183,90 @@ export default async function AdminPage() {
             </ul>
           ) : (
             <p className="text-gray-500">Aucun article publié.</p>
+          )}
+        </section>
+
+        {/* Commentaires en attente */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold mb-4">
+            Commentaires en attente ({pendingComments?.length || 0})
+          </h2>
+          {pendingComments && pendingComments.length > 0 ? (
+            <div className="space-y-4">
+              {pendingComments.map((comment) => (
+                <div
+                  key={comment.id}
+                  className="bg-white rounded-lg shadow p-6"
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <p className="text-sm text-gray-500 mb-2">
+                        Sur l'article :{" "}
+                        <Link
+                          href={`/articles/${
+                            (comment.articles as any)?.slug || ""
+                          }`}
+                          className="text-blue-600 hover:underline font-semibold"
+                        >
+                          {(comment.articles as any)?.title ||
+                            "Article inconnu"}
+                        </Link>
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Par {(comment.profiles as any)?.username || "Anonyme"} •{" "}
+                        {new Date(comment.created_at).toLocaleDateString(
+                          "fr-FR",
+                          {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }
+                        )}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <form action={approveComment}>
+                        <input
+                          type="hidden"
+                          name="commentId"
+                          value={comment.id}
+                        />
+                        <button
+                          type="submit"
+                          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                        >
+                          Approuver
+                        </button>
+                      </form>
+                      <form action={rejectComment}>
+                        <input
+                          type="hidden"
+                          name="commentId"
+                          value={comment.id}
+                        />
+                        <button
+                          type="submit"
+                          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                        >
+                          Rejeter
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded">
+                    <p className="text-gray-700 whitespace-pre-wrap">
+                      {comment.content}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500">
+              Aucun commentaire en attente de modération.
+            </p>
           )}
         </section>
       </div>

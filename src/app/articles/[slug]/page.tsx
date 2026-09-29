@@ -4,6 +4,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Link from "next/link";
 import type { Metadata } from "next";
+import CommentsSection from "@/components/CommentsSection"; // ← IMPORT MANQUANT
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;
@@ -67,12 +68,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
   const { data: article } = await supabase
     .from("articles")
-    .select(
-      `
-      id, title, content_md, created_at,
-      profiles:author_id (username)
-    `
-    )
+    .select(`id, title, content_md, created_at, profiles:author_id (username)`)
     .eq("slug", slug)
     .eq("status", "published")
     .single();
@@ -151,8 +147,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         <header className="mb-8">
           <h1 className="text-4xl font-bold mb-4">{article.title}</h1>
           <div className="text-gray-600">
-            Par <span className="font-semibold">{authorName}</span>
-            {" • "}
+            Par <span className="font-semibold">{authorName}</span> •{" "}
             {new Date(article.created_at).toLocaleDateString("fr-FR", {
               year: "numeric",
               month: "long",
@@ -166,6 +161,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             {article.content_md}
           </ReactMarkdown>
         </div>
+
+        {/* ← COMPOSANT MANQUANT À AJOUTER ICI */}
+        <CommentsSection articleId={article.id} />
       </div>
     </article>
   );
