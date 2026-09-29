@@ -25,9 +25,10 @@ export async function generateMetadata({
   if (!article) return { title: "Article non trouvé" };
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const authorName = (article.profiles as any)?.username || "Anonyme";
   const ogImageUrl = `${baseUrl}/api/og?title=${encodeURIComponent(
     article.title
-  )}&author=${encodeURIComponent(article.profiles?.username || "Anonyme")}`;
+  )}&author=${encodeURIComponent(authorName)}`;
 
   return {
     title: article.title,
@@ -37,7 +38,7 @@ export async function generateMetadata({
       description: article.content_md.substring(0, 160).replace(/\n/g, " "),
       type: "article",
       publishedTime: article.created_at,
-      authors: [article.profiles?.username || "Anonyme"],
+      authors: [authorName],
       images: [
         {
           url: ogImageUrl,
@@ -62,7 +63,7 @@ export async function generateMetadata({
 export default async function ArticlePage({ params }: ArticlePageProps) {
   const { slug } = await params;
   const supabase = await createClient();
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"; // ← CORRECTION 2
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
   const { data: article } = await supabase
     .from("articles")
@@ -80,13 +81,15 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     notFound();
   }
 
+  const authorName = (article.profiles as any)?.username || "Anonyme";
+
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "Article",
     headline: article.title,
     author: {
       "@type": "Person",
-      name: article.profiles?.username || "Anonyme",
+      name: authorName,
     },
     datePublished: article.created_at,
     publisher: {
@@ -95,7 +98,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     },
     mainEntityOfPage: {
       "@type": "WebPage",
-      "@id": `${baseUrl}/articles/${slug}`, // ← Utilise baseUrl
+      "@id": `${baseUrl}/articles/${slug}`,
     },
   };
 
@@ -107,13 +110,13 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         "@type": "ListItem",
         position: 1,
         name: "Accueil",
-        item: baseUrl, // ← Utilise baseUrl
+        item: baseUrl,
       },
       {
         "@type": "ListItem",
         position: 2,
         name: article.title,
-        item: `${baseUrl}/articles/${slug}`, // ← Utilise baseUrl
+        item: `${baseUrl}/articles/${slug}`,
       },
     ],
   };
@@ -148,11 +151,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         <header className="mb-8">
           <h1 className="text-4xl font-bold mb-4">{article.title}</h1>
           <div className="text-gray-600">
-            Par{" "}
-            <span className="font-semibold">
-              {article.profiles?.username || "Anonyme"}
-            </span>{" "}
-            •
+            Par <span className="font-semibold">{authorName}</span>
+            {" • "}
             {new Date(article.created_at).toLocaleDateString("fr-FR", {
               year: "numeric",
               month: "long",

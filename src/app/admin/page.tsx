@@ -5,7 +5,6 @@ import Link from "next/link";
 
 export default async function AdminPage() {
   const supabase = await createClient();
-
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -28,10 +27,7 @@ export default async function AdminPage() {
   const { data: pendingArticles } = await supabase
     .from("articles")
     .select(
-      `
-      id, title, slug, content_md, status, created_at,
-      profiles:author_id (username)
-    `
+      `id, title, slug, content_md, status, created_at, profiles:author_id (username)`
     )
     .eq("status", "pending")
     .order("created_at", { ascending: false });
@@ -39,10 +35,7 @@ export default async function AdminPage() {
   const { data: publishedArticles } = await supabase
     .from("articles")
     .select(
-      `
-      id, title, slug, status, created_at,
-      profiles:author_id (username)
-    `
+      `id, title, slug, status, created_at, profiles:author_id (username)`
     )
     .eq("status", "published")
     .order("created_at", { ascending: false });
@@ -72,7 +65,7 @@ export default async function AdminPage() {
                     <div>
                       <h3 className="text-xl font-semibold">{article.title}</h3>
                       <p className="text-sm text-gray-500">
-                        Par {article.profiles?.username || "Anonyme"} •
+                        Par {(article.profiles as any)?.username || "Anonyme"} •{" "}
                         {new Date(article.created_at).toLocaleDateString(
                           "fr-FR"
                         )}
@@ -141,7 +134,7 @@ export default async function AdminPage() {
                       {article.title}
                     </Link>
                     <p className="text-sm text-gray-500">
-                      Par {article.profiles?.username || "Anonyme"} •
+                      Par {(article.profiles as any)?.username || "Anonyme"} •{" "}
                       {new Date(article.created_at).toLocaleDateString("fr-FR")}
                     </p>
                   </div>

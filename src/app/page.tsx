@@ -10,19 +10,13 @@ export const metadata: Metadata = {
 
 export default async function Home() {
   const supabase = await createClient();
-
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   const { data: articles } = await supabase
     .from("articles")
-    .select(
-      `
-      id, title, slug, created_at,
-      profiles:author_id (username)
-    `
-    )
+    .select(`id, title, slug, created_at, profiles:author_id (username)`)
     .eq("status", "published")
     .order("created_at", { ascending: false })
     .limit(10);
@@ -69,7 +63,6 @@ export default async function Home() {
         </div>
 
         <h2 className="text-2xl font-bold mb-6">Derniers articles</h2>
-
         {articles && articles.length > 0 ? (
           <div className="grid gap-6">
             {articles.map((article) => (
@@ -82,7 +75,7 @@ export default async function Home() {
                   {article.title}
                 </h3>
                 <p className="text-sm text-gray-500">
-                  Par {article.profiles?.username || "Anonyme"} •
+                  Par {(article.profiles as any)?.username || "Anonyme"} •{" "}
                   {new Date(article.created_at).toLocaleDateString("fr-FR", {
                     year: "numeric",
                     month: "long",
