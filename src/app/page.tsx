@@ -66,23 +66,34 @@ export default async function Home() {
         {articles && articles.length > 0 ? (
           <div className="grid gap-6">
             {articles.map((article) => (
-              <Link
+              <div
                 key={article.id}
-                href={`/articles/${article.slug}`}
                 className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow"
               >
-                <h3 className="text-xl font-semibold text-blue-600 mb-2">
+                <Link
+                  href={`/articles/${article.slug}`}
+                  className="text-xl font-semibold text-blue-600 hover:underline block mb-2"
+                >
                   {article.title}
-                </h3>
+                </Link>
                 <p className="text-sm text-gray-500">
-                  Par {(article.profiles as any)?.username || "Anonyme"} •{" "}
+                  Par{" "}
+                  <Link
+                    href={`/profils/${
+                      (article.profiles as any)?.username || ""
+                    }`}
+                    className="text-blue-600 hover:underline"
+                  >
+                    {(article.profiles as any)?.username || "Anonyme"}
+                  </Link>{" "}
+                  •{" "}
                   {new Date(article.created_at).toLocaleDateString("fr-FR", {
                     year: "numeric",
                     month: "long",
                     day: "numeric",
                   })}
                 </p>
-              </Link>
+              </div>
             ))}
           </div>
         ) : (

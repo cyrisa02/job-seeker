@@ -1,15 +1,22 @@
 "use client";
-
 import { useState } from "react";
 import { submitArticle } from "@/app/dashboard/actions";
 
-interface ArticleFormProps {
-  userId: string;
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
 }
 
-export default function ArticleForm({ userId }: ArticleFormProps) {
+interface ArticleFormProps {
+  userId: string;
+  categories: Category[];
+}
+
+export default function ArticleForm({ userId, categories }: ArticleFormProps) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [categoryId, setCategoryId] = useState("");
   const [status, setStatus] = useState<
     "idle" | "submitting" | "success" | "error"
   >("idle");
@@ -18,16 +25,15 @@ export default function ArticleForm({ userId }: ArticleFormProps) {
   async function handleSubmit(formData: FormData) {
     setStatus("submitting");
     setError("");
-
     try {
       const result = await submitArticle(formData);
-
       if (result?.error) {
         setError(result.error);
         setStatus("error");
       } else {
         setTitle("");
         setContent("");
+        setCategoryId("");
         setStatus("success");
         setTimeout(() => setStatus("idle"), 3000);
       }
@@ -44,13 +50,11 @@ export default function ArticleForm({ userId }: ArticleFormProps) {
           {error}
         </div>
       )}
-
       {status === "success" && (
         <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-2 rounded text-sm">
           Article soumis avec succès ! Il sera publié après modération.
         </div>
       )}
-
       <div>
         <label htmlFor="title" className="block text-sm font-medium mb-1">
           Titre de l'article
@@ -66,7 +70,26 @@ export default function ArticleForm({ userId }: ArticleFormProps) {
           placeholder="Ex: Comment j'ai retrouvé un emploi en 3 mois"
         />
       </div>
-
+      <div>
+        <label htmlFor="category" className="block text-sm font-medium mb-1">
+          Catégorie
+        </label>
+        <select
+          id="category"
+          name="categoryId"
+          required
+          value={categoryId}
+          onChange={(e) => setCategoryId(e.target.value)}
+          className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+        >
+          <option value="">-- Choisir une catégorie --</option>
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {cat.name}
+            </option>
+          ))}
+        </select>
+      </div>
       <div>
         <label htmlFor="content" className="block text-sm font-medium mb-1">
           Contenu (Markdown supporté)
@@ -82,7 +105,6 @@ export default function ArticleForm({ userId }: ArticleFormProps) {
           placeholder="Rédigez votre article ici... Vous pouvez utiliser la syntaxe Markdown."
         />
       </div>
-
       <button
         type="submit"
         disabled={status === "submitting"}

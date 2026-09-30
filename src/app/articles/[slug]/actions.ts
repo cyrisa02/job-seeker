@@ -1,3 +1,5 @@
+// src/app/articles/[slug]/actions.ts
+
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
@@ -28,7 +30,6 @@ export async function submitComment(formData: FormData) {
     return { error: "Le commentaire ne peut pas dépasser 1000 caractères" };
   }
 
-  // Vérifier que l'article existe (sans filtre de statut)
   const { data: article, error: articleError } = await supabase
     .from("articles")
     .select("id, status")
@@ -42,7 +43,6 @@ export async function submitComment(formData: FormData) {
     return { error: "Article introuvable" };
   }
 
-  // Rate limiting : max 5 commentaires par heure
   const oneHourAgo = new Date(Date.now() - 3600000).toISOString();
   const { count } = await supabase
     .from("comments")
@@ -54,7 +54,6 @@ export async function submitComment(formData: FormData) {
     return { error: "Trop de commentaires. Réessayez dans une heure." };
   }
 
-  // Insertion
   const { error } = await supabase.from("comments").insert({
     article_id: articleId,
     author_id: user.id,
@@ -69,4 +68,62 @@ export async function submitComment(formData: FormData) {
 
   revalidatePath(`/articles/${articleId}`);
   return { success: true };
+}
+
+// ← NOUVELLE FONCTION À AJOUTER
+export async function toggleThank(articleId: string) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Vous devez être connecté" };
+  }
+
+  console.log("toggleThank - articleId:", articleId, "userId:", user.id);
+
+  // Vérifier si l'utilisateur a déjà remercié
+  const { data: existingThank } = await supabase
+    .from("thanks")
+    .select("id")
+    .eq("article_id", articleId)
+    .eq("user_id", user.id)
+    .single();
+
+  let thanked: boolean;
+  let count: number;
+
+  if (existingThank) {
+    // Retirer le Merci
+    const { error } = await supabase
+      .from("thanks")
+      .delete()
+      .eq("id", existingThank.id);
+
+    console.log("toggleThank - removed, error:", error);
+    thanked = false;
+  } else {
+    // Ajouter le Merci
+    const { error } = await supabase
+      .from("thanks")
+      .insert({ article_id: articleId, user_id: user.id });
+
+    console.log("toggleThank - added, error:", error);
+    thanked = true;
+  }
+
+  // Compter les Merci
+  const { count: thankCount } = await supabase
+    .from("thanks")
+    .select("*", { count: "exact", head: true })
+    .eq("article_id", articleId);
+
+  count = thankCount || 0;
+
+  console.log("toggleThank - thanked:", thanked, "count:", count);
+
+  revalidatePath(`/articles/${articleId}`);
+  return { success: true, thanked, count };
 }

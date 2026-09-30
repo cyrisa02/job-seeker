@@ -1,10 +1,12 @@
+// src/app/articles/[slug]/page.tsx
+
 import { createClient } from "@/utils/supabase/server";
 import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Link from "next/link";
 import type { Metadata } from "next";
-import CommentsSection from "@/components/CommentsSection"; // ← IMPORT MANQUANT
+import ThanksButton from "@/components/ThanksButton"; // ← IMPORT MANQUANT
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;
@@ -68,7 +70,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
   const { data: article } = await supabase
     .from("articles")
-    .select(`id, title, content_md, created_at, profiles:author_id (username)`)
+    .select("id, title, content_md, created_at, profiles:author_id (username)")
     .eq("slug", slug)
     .eq("status", "published")
     .single();
@@ -78,6 +80,22 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   }
 
   const authorName = (article.profiles as any)?.username || "Anonyme";
+
+  // Récupérer les Merci
+  const { data: thanks } = await supabase
+    .from("thanks")
+    .select("user_id")
+    .eq("article_id", article.id);
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const hasThanked = thanks?.some((t) => t.user_id === user?.id) || false;
+  const thankCount = thanks?.length || 0;
+
+  console.log("ArticlePage - articleId:", article.id);
+  console.log("ArticlePage - thankCount:", thankCount);
+  console.log("ArticlePage - hasThanked:", hasThanked);
 
   const articleSchema = {
     "@context": "https://schema.org",
@@ -147,7 +165,14 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         <header className="mb-8">
           <h1 className="text-4xl font-bold mb-4">{article.title}</h1>
           <div className="text-gray-600">
-            Par <span className="font-semibold">{authorName}</span> •{" "}
+            Par{" "}
+            <Link
+              href={`/profils/${authorName}`}
+              className="font-semibold text-blue-600 hover:underline"
+            >
+              {authorName}
+            </Link>
+            {" • "}
             {new Date(article.created_at).toLocaleDateString("fr-FR", {
               year: "numeric",
               month: "long",
@@ -156,14 +181,21 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           </div>
         </header>
 
+        {/* Bouton Merci */}
+        <div className="flex items-center gap-4 mb-8">
+          <ThanksButton
+            articleId={article.id}
+            userId={user?.id || null}
+            initialCount={thankCount}
+            hasThanked={hasThanked}
+          />
+        </div>
+
         <div className="prose prose-lg max-w-none">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
             {article.content_md}
           </ReactMarkdown>
         </div>
-
-        {/* ← COMPOSANT MANQUANT À AJOUTER ICI */}
-        <CommentsSection articleId={article.id} />
       </div>
     </article>
   );

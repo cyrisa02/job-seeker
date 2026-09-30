@@ -1,14 +1,13 @@
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import ArticleForm from "@/components/ArticleForm";
+import Link from "next/link";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
   if (!user) {
     redirect("/auth/login");
   }
@@ -19,6 +18,14 @@ export default async function DashboardPage() {
     .select("username, role")
     .eq("id", user.id)
     .single();
+
+  // Récupérer les catégories
+  const { data: categories } = await supabase
+    .from("categories")
+    .select("id, name, slug")
+    .order("name");
+
+  console.log("Dashboard - categories:", categories); // Debug
 
   // Récupérer les articles soumis par l'utilisateur
   const { data: myArticles } = await supabase
@@ -35,6 +42,18 @@ export default async function DashboardPage() {
           <p className="text-gray-600">
             Connecté en tant que{" "}
             <span className="font-semibold">{user.email}</span>
+            <Link
+              href={`/profils/${profile?.username || ""}`}
+              className="text-blue-600 hover:underline"
+            >
+              Voir mon profil
+            </Link>
+            <Link
+              href="/dashboard/profil"
+              className="ml-4 text-blue-600 hover:underline text-sm"
+            >
+              Modifier mon profil
+            </Link>
             {profile?.role && (
               <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">
                 {profile.role}
@@ -42,12 +61,10 @@ export default async function DashboardPage() {
             )}
           </p>
         </div>
-
         <div className="bg-white rounded-lg shadow p-6 mb-8">
           <h2 className="text-2xl font-bold mb-4">Soumettre un article</h2>
-          <ArticleForm userId={user.id} />
+          <ArticleForm userId={user.id} categories={categories || []} />
         </div>
-
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-2xl font-bold mb-4">Mes articles soumis</h2>
           {myArticles && myArticles.length > 0 ? (

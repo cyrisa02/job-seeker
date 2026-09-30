@@ -95,7 +95,16 @@ export default async function AdminPage() {
                     <div>
                       <h3 className="text-xl font-semibold">{article.title}</h3>
                       <p className="text-sm text-gray-500">
-                        Par {(article.profiles as any)?.username || "Anonyme"} •{" "}
+                        Par{" "}
+                        <Link
+                          href={`/profils/${
+                            (article.profiles as any)?.username || ""
+                          }`}
+                          className="text-blue-600 hover:underline"
+                        >
+                          {(article.profiles as any)?.username || "Anonyme"}
+                        </Link>{" "}
+                        •{" "}
                         {new Date(article.created_at).toLocaleDateString(
                           "fr-FR"
                         )}

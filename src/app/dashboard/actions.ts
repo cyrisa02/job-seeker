@@ -1,5 +1,4 @@
 "use server";
-
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 
@@ -16,24 +15,28 @@ function generateSlug(title: string): string {
 
 export async function submitArticle(formData: FormData) {
   const supabase = await createClient();
-
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
   if (!user) {
     return { error: "Vous devez être connecté pour soumettre un article" };
   }
 
   const title = formData.get("title") as string;
   const content = formData.get("content") as string;
+  const categoryId = formData.get("categoryId") as string;
+
+  console.log("submitArticle - title:", title);
+  console.log("submitArticle - categoryId:", categoryId);
 
   if (!title || title.trim().length < 10) {
     return { error: "Le titre doit contenir au moins 10 caractères" };
   }
-
   if (!content || content.trim().length < 100) {
     return { error: "Le contenu doit contenir au moins 100 caractères" };
+  }
+  if (!categoryId) {
+    return { error: "Veuillez choisir une catégorie" };
   }
 
   // Générer un slug de base
@@ -47,7 +50,6 @@ export async function submitArticle(formData: FormData) {
     .single();
 
   if (existingArticle) {
-    // Ajouter un timestamp uniquement si le slug existe déjà
     slug = `${slug}-${Date.now()}`;
   }
 
@@ -56,6 +58,7 @@ export async function submitArticle(formData: FormData) {
     content_md: content.trim(),
     slug: slug,
     author_id: user.id,
+    category_id: categoryId,
     status: "pending",
   });
 
@@ -65,6 +68,5 @@ export async function submitArticle(formData: FormData) {
   }
 
   revalidatePath("/dashboard");
-
   return { success: true };
 }
