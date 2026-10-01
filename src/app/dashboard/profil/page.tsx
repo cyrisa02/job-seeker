@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import ProfilForm from "@/components/ProfilForm";
 import PasswordForm from "@/components/PasswordForm";
+import { logger } from "@/utils/logger"; // ← AJOUT
 
 export default async function EditProfilPage() {
   const supabase = await createClient();

@@ -7,6 +7,7 @@ import remarkGfm from "remark-gfm";
 import Link from "next/link";
 import type { Metadata } from "next";
 import ThanksButton from "@/components/ThanksButton";
+import { logger } from "@/utils/logger"; // ← AJOUT
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;

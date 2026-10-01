@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import QuestionForm from "@/components/QuestionForm";
 import Link from "next/link";
+import { logger } from "@/utils/logger"; // ← AJOUT
 
 export default async function AskQuestionPage() {
   const supabase = await createClient();

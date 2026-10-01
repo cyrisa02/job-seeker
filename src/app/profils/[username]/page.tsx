@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { logger } from "@/utils/logger"; // ← AJOUT
 
 interface ProfilePageProps {
   params: Promise<{ username: string }>;

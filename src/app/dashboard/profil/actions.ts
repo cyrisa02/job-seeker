@@ -4,6 +4,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
+import { logger } from "@/utils/logger"; // ← AJOUT
 
 export async function updateProfil(formData: FormData) {
   const supabase = await createClient();

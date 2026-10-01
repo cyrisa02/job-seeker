@@ -1,6 +1,7 @@
 "use server";
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
+import { logger } from "@/utils/logger"; // ← AJOUT
 
 // Fonction pour générer un slug propre
 function generateSlug(title: string): string {
