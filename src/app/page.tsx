@@ -1,3 +1,5 @@
+// src/app/page.tsx
+
 import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -14,12 +16,25 @@ export default async function Home() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Récupérer les catégories
+  const { data: categories } = await supabase
+    .from("categories")
+    .select("id, name, slug, description")
+    .order("name");
+
+  console.log("Home - categories:", categories); // Debug
+
+  // Récupérer les articles avec leur catégorie
   const { data: articles } = await supabase
     .from("articles")
-    .select(`id, title, slug, created_at, profiles:author_id (username)`)
+    .select(
+      `id, title, slug, created_at, category_id, categories!inner (name, slug), profiles:author_id (username)`,
+    )
     .eq("status", "published")
     .order("created_at", { ascending: false })
     .limit(10);
+
+  console.log("Home - articles:", articles?.length); // Debug
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -62,6 +77,25 @@ export default async function Home() {
           </p>
         </div>
 
+        {/* Section Catégories */}
+        {categories && categories.length > 0 && (
+          <div className="mb-12">
+            <h2 className="text-2xl font-bold mb-6">Explorer par thème</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {categories.map((cat) => (
+                <Link
+                  key={cat.id}
+                  href={`/categories/${cat.slug}`}
+                  className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow border-l-4 border-blue-600"
+                >
+                  <h3 className="font-bold text-lg mb-2">{cat.name}</h3>
+                  <p className="text-sm text-gray-600">{cat.description}</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
         <h2 className="text-2xl font-bold mb-6">Derniers articles</h2>
         {articles && articles.length > 0 ? (
           <div className="grid gap-6">
@@ -76,12 +110,20 @@ export default async function Home() {
                 >
                   {article.title}
                 </Link>
+                <div className="flex items-center gap-2 mb-2">
+                  {(article.categories as any)?.slug && (
+                    <Link
+                      href={`/categories/${(article.categories as any).slug}`}
+                      className="inline-block bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded hover:bg-blue-200"
+                    >
+                      {(article.categories as any).name}
+                    </Link>
+                  )}
+                </div>
                 <p className="text-sm text-gray-500">
                   Par{" "}
                   <Link
-                    href={`/profils/${
-                      (article.profiles as any)?.username || ""
-                    }`}
+                    href={`/profils/${(article.profiles as any)?.username || ""}`}
                     className="text-blue-600 hover:underline"
                   >
                     {(article.profiles as any)?.username || "Anonyme"}

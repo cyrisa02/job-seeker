@@ -6,7 +6,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Link from "next/link";
 import type { Metadata } from "next";
-import ThanksButton from "@/components/ThanksButton"; // ← IMPORT MANQUANT
+import ThanksButton from "@/components/ThanksButton";
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;
@@ -29,9 +29,7 @@ export async function generateMetadata({
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   const authorName = (article.profiles as any)?.username || "Anonyme";
-  const ogImageUrl = `${baseUrl}/api/og?title=${encodeURIComponent(
-    article.title
-  )}&author=${encodeURIComponent(authorName)}`;
+  const ogImageUrl = `${baseUrl}/api/og?title=${encodeURIComponent(article.title)}&author=${encodeURIComponent(authorName)}`;
 
   return {
     title: article.title,
@@ -70,7 +68,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
   const { data: article } = await supabase
     .from("articles")
-    .select("id, title, content_md, created_at, profiles:author_id (username)")
+    .select(
+      `id, title, content_md, created_at, category_id, categories!inner (name, slug), profiles:author_id (username)`,
+    )
     .eq("slug", slug)
     .eq("status", "published")
     .single();
@@ -94,8 +94,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const thankCount = thanks?.length || 0;
 
   console.log("ArticlePage - articleId:", article.id);
+  console.log("ArticlePage - category:", (article.categories as any)?.name); // Debug
   console.log("ArticlePage - thankCount:", thankCount);
-  console.log("ArticlePage - hasThanked:", hasThanked);
 
   const articleSchema = {
     "@context": "https://schema.org",
@@ -152,6 +152,17 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             Accueil
           </Link>
           <span className="mx-2">›</span>
+          {(article.categories as any)?.name && (
+            <>
+              <Link
+                href={`/categories/${(article.categories as any).slug}`}
+                className="hover:underline"
+              >
+                {(article.categories as any).name}
+              </Link>
+              <span className="mx-2">›</span>
+            </>
+          )}
           <span className="text-gray-900">{article.title}</span>
         </nav>
 
@@ -164,6 +175,17 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
         <header className="mb-8">
           <h1 className="text-4xl font-bold mb-4">{article.title}</h1>
+          <div className="flex items-center gap-3 flex-wrap mb-4">
+            {/* Badge catégorie */}
+            {(article.categories as any)?.slug && (
+              <Link
+                href={`/categories/${(article.categories as any).slug}`}
+                className="inline-block bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded hover:bg-blue-200"
+              >
+                {(article.categories as any).name}
+              </Link>
+            )}
+          </div>
           <div className="text-gray-600">
             Par{" "}
             <Link

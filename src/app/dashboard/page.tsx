@@ -1,7 +1,10 @@
+// src/app/dashboard/page.tsx
+
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import ArticleForm from "@/components/ArticleForm";
-import Link from "next/link";
+import LogoutButton from "@/components/LogoutButton";
+import Link from "next/link"; // ← à ajouter si pas déjà présent
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -19,13 +22,13 @@ export default async function DashboardPage() {
     .eq("id", user.id)
     .single();
 
-  // Récupérer les catégories
+  // Récupérer les catégories ← AJOUT CRITIQUE
   const { data: categories } = await supabase
     .from("categories")
     .select("id, name, slug")
     .order("name");
 
-  console.log("Dashboard - categories:", categories); // Debug
+  console.log("DashboardPage - categories:", categories); // Debug
 
   // Récupérer les articles soumis par l'utilisateur
   const { data: myArticles } = await supabase
@@ -38,33 +41,45 @@ export default async function DashboardPage() {
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
-          <p className="text-gray-600">
-            Connecté en tant que{" "}
-            <span className="font-semibold">{user.email}</span>
-            <Link
-              href={`/profils/${profile?.username || ""}`}
-              className="text-blue-600 hover:underline"
-            >
-              Voir mon profil
-            </Link>
-            <Link
-              href="/dashboard/profil"
-              className="ml-4 text-blue-600 hover:underline text-sm"
-            >
-              Modifier mon profil
-            </Link>
-            {profile?.role && (
-              <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">
-                {profile.role}
-              </span>
-            )}
-          </p>
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
+              <p className="text-gray-600">
+                Connecté en tant que{" "}
+                <span className="font-semibold">{user.email}</span>
+                {profile?.role && (
+                  <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">
+                    {profile.role}
+                  </span>
+                )}
+              </p>
+            </div>
+            <div className="flex gap-4 items-center">
+              <Link
+                href="/dashboard/profil"
+                className="text-blue-600 hover:underline text-sm font-medium"
+              >
+                Mon profil
+              </Link>
+              <Link
+                href={`/profils/${profile?.username || ""}`}
+                className="text-gray-600 hover:underline text-sm"
+              >
+                Voir mon profil public
+              </Link>
+              <LogoutButton />
+            </div>
+          </div>
         </div>
+
         <div className="bg-white rounded-lg shadow p-6 mb-8">
           <h2 className="text-2xl font-bold mb-4">Soumettre un article</h2>
-          <ArticleForm userId={user.id} categories={categories || []} />
+          <ArticleForm
+            userId={user.id}
+            categories={categories || []} // ← AJOUT CRITIQUE
+          />
         </div>
+
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-2xl font-bold mb-4">Mes articles soumis</h2>
           {myArticles && myArticles.length > 0 ? (
@@ -76,7 +91,7 @@ export default async function DashboardPage() {
                       <h3 className="font-semibold">{article.title}</h3>
                       <p className="text-sm text-gray-500">
                         {new Date(article.created_at).toLocaleDateString(
-                          "fr-FR"
+                          "fr-FR",
                         )}
                       </p>
                     </div>
@@ -85,15 +100,15 @@ export default async function DashboardPage() {
                         article.status === "published"
                           ? "bg-green-100 text-green-800"
                           : article.status === "pending"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-gray-100 text-gray-800"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-gray-100 text-gray-800"
                       }`}
                     >
                       {article.status === "published"
                         ? "Publié"
                         : article.status === "pending"
-                        ? "En attente"
-                        : "Archivé"}
+                          ? "En attente"
+                          : "Archivé"}
                     </span>
                   </div>
                 </li>
