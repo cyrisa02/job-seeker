@@ -93,9 +93,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const hasThanked = thanks?.some((t) => t.user_id === user?.id) || false;
   const thankCount = thanks?.length || 0;
 
-  console.log("ArticlePage - articleId:", article.id);
-  console.log("ArticlePage - category:", (article.categories as any)?.name); // Debug
-  console.log("ArticlePage - thankCount:", thankCount);
+  logger.log("ArticlePage - articleId:", article.id);
+  logger.log("ArticlePage - category:", (article.categories as any)?.name); // Debug
+  logger.log("ArticlePage - thankCount:", thankCount);
 
   const articleSchema = {
     "@context": "https://schema.org",

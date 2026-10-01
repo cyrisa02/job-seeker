@@ -19,8 +19,8 @@ export async function submitComment(formData: FormData) {
   const content = formData.get("content") as string;
   const articleId = formData.get("articleId") as string;
 
-  console.log("submitComment - articleId:", articleId);
-  console.log("submitComment - content:", content);
+  logger.log("submitComment - articleId:", articleId);
+  logger.log("submitComment - content:", content);
 
   if (!content || content.trim().length < 10) {
     return { error: "Le commentaire doit contenir au moins 10 caractères" };
@@ -36,8 +36,8 @@ export async function submitComment(formData: FormData) {
     .eq("id", articleId)
     .single();
 
-  console.log("submitComment - article:", article);
-  console.log("submitComment - articleError:", articleError);
+  logger.log("submitComment - article:", article);
+  logger.log("submitComment - articleError:", articleError);
 
   if (!article) {
     return { error: "Article introuvable" };
@@ -82,7 +82,7 @@ export async function toggleThank(articleId: string) {
     return { error: "Vous devez être connecté" };
   }
 
-  console.log("toggleThank - articleId:", articleId, "userId:", user.id);
+  logger.log("toggleThank - articleId:", articleId, "userId:", user.id);
 
   // Vérifier si l'utilisateur a déjà remercié
   const { data: existingThank } = await supabase
@@ -102,7 +102,7 @@ export async function toggleThank(articleId: string) {
       .delete()
       .eq("id", existingThank.id);
 
-    console.log("toggleThank - removed, error:", error);
+    logger.log("toggleThank - removed, error:", error);
     thanked = false;
   } else {
     // Ajouter le Merci
@@ -110,7 +110,7 @@ export async function toggleThank(articleId: string) {
       .from("thanks")
       .insert({ article_id: articleId, user_id: user.id });
 
-    console.log("toggleThank - added, error:", error);
+    logger.log("toggleThank - added, error:", error);
     thanked = true;
   }
 
@@ -122,7 +122,7 @@ export async function toggleThank(articleId: string) {
 
   count = thankCount || 0;
 
-  console.log("toggleThank - thanked:", thanked, "count:", count);
+  logger.log("toggleThank - thanked:", thanked, "count:", count);
 
   revalidatePath(`/articles/${articleId}`);
   return { success: true, thanked, count };

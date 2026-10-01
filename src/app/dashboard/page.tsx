@@ -28,8 +28,6 @@ export default async function DashboardPage() {
     .select("id, name, slug")
     .order("name");
 
-  console.log("DashboardPage - categories:", categories); // Debug
-
   // Récupérer les articles soumis par l'utilisateur
   const { data: myArticles } = await supabase
     .from("articles")

@@ -22,7 +22,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   const { username } = await params;
   const supabase = await createClient();
 
-  console.log("ProfilePage - fetching profile for username:", username);
+  logger.log("ProfilePage - fetching profile for username:", username);
 
   // 1. Récupérer le profil
   const { data: profile } = await supabase
@@ -32,7 +32,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     .single();
 
   if (!profile) {
-    console.log("ProfilePage - profile not found");
+    logger.log("ProfilePage - profile not found");
     notFound();
   }
 
@@ -44,7 +44,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     .eq("status", "published")
     .order("created_at", { ascending: false });
 
-  console.log("ProfilePage - found articles:", articles?.length);
+  logger.log("ProfilePage - found articles:", articles?.length);
 
   return (
     <main className="min-h-screen bg-gray-50 p-8">

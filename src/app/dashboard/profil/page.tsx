@@ -19,10 +19,10 @@ export default async function EditProfilPage() {
     .eq("id", user.id)
     .single();
 
-  console.log("EditProfilPage - profile:", profile);
+  logger.log("EditProfilPage - profile:", profile);
 
   if (!profile) {
-    console.log("EditProfilPage - profile not found, redirecting");
+    logger.log("EditProfilPage - profile not found, redirecting");
     redirect("/auth/login");
   }
 

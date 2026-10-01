@@ -117,3 +117,116 @@ export async function rejectComment(formData: FormData): Promise<void> {
 
   revalidatePath("/admin");
 }
+
+export async function publishQuestion(formData: FormData): Promise<void> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/auth/login");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.role !== "admin" && profile?.role !== "moderator") {
+    return;
+  }
+
+  const questionId = formData.get("questionId") as string;
+
+  await supabase
+    .from("questions")
+    .update({ status: "published" })
+    .eq("id", questionId);
+
+  revalidatePath("/admin");
+  revalidatePath("/questions");
+}
+
+export async function rejectQuestion(formData: FormData): Promise<void> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/auth/login");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.role !== "admin" && profile?.role !== "moderator") {
+    return;
+  }
+
+  const questionId = formData.get("questionId") as string;
+
+  await supabase
+    .from("questions")
+    .update({ status: "archived" })
+    .eq("id", questionId);
+
+  revalidatePath("/admin");
+}
+
+export async function approveAnswer(formData: FormData): Promise<void> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/auth/login");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.role !== "admin" && profile?.role !== "moderator") {
+    return;
+  }
+
+  const answerId = formData.get("answerId") as string;
+
+  await supabase
+    .from("answers")
+    .update({ status: "approved" })
+    .eq("id", answerId);
+
+  revalidatePath("/admin");
+}
+
+export async function rejectAnswer(formData: FormData): Promise<void> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/auth/login");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.role !== "admin" && profile?.role !== "moderator") {
+    return;
+  }
+
+  const answerId = formData.get("answerId") as string;
+
+  await supabase
+    .from("answers")
+    .update({ status: "rejected" })
+    .eq("id", answerId);
+
+  revalidatePath("/admin");
+}

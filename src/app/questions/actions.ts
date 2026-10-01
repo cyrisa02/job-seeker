@@ -1,72 +1,75 @@
+// src/app/questions/actions.ts
+
 "use server";
+
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 
-// Fonction pour générer un slug propre
 function generateSlug(title: string): string {
   return title
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // Enlever les accents
+    .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "")
-    .substring(0, 80); // Limiter la longueur
+    .substring(0, 80);
 }
 
-export async function submitArticle(formData: FormData) {
+export async function submitQuestion(formData: FormData) {
   const supabase = await createClient();
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
   if (!user) {
-    return { error: "Vous devez être connecté pour soumettre un article" };
+    return { error: "Vous devez être connecté" };
   }
 
   const title = formData.get("title") as string;
   const content = formData.get("content") as string;
   const categoryId = formData.get("categoryId") as string;
 
-  logger.log("submitArticle - title:", title);
-  logger.log("submitArticle - categoryId:", categoryId);
+  logger.log("submitQuestion - title:", title);
+  logger.log("submitQuestion - categoryId:", categoryId);
 
   if (!title || title.trim().length < 10) {
     return { error: "Le titre doit contenir au moins 10 caractères" };
   }
-  if (!content || content.trim().length < 100) {
-    return { error: "Le contenu doit contenir au moins 100 caractères" };
+  if (!content || content.trim().length < 30) {
+    return { error: "Le contenu doit contenir au moins 30 caractères" };
   }
   if (!categoryId) {
     return { error: "Veuillez choisir une catégorie" };
   }
 
-  // Générer un slug de base
   let slug = generateSlug(title);
 
-  // Vérifier l'unicité et ajouter un suffixe si nécessaire
-  const { data: existingArticle } = await supabase
-    .from("articles")
+  const { data: existing } = await supabase
+    .from("questions")
     .select("slug")
     .eq("slug", slug)
     .single();
 
-  if (existingArticle) {
+  if (existing) {
     slug = `${slug}-${Date.now()}`;
   }
 
-  const { error } = await supabase.from("articles").insert({
+  const { error } = await supabase.from("questions").insert({
     title: title.trim(),
-    content_md: content.trim(),
-    slug: slug,
-    author_id: user.id,
+    content: content.trim(),
+    slug,
     category_id: categoryId,
+    author_id: user.id,
     status: "pending",
   });
 
   if (error) {
-    console.error("Erreur lors de la soumission:", error);
-    return { error: "Erreur lors de la soumission de l'article" };
+    console.error("Erreur submitQuestion:", error);
+    return { error: "Erreur lors de la soumission" };
   }
 
-  revalidatePath("/dashboard");
+  revalidatePath("/questions");
+  revalidatePath("/admin");
   return { success: true };
 }

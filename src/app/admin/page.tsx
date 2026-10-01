@@ -1,3 +1,5 @@
+// src/app/admin/page.tsx
+
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import {
@@ -5,8 +7,13 @@ import {
   archiveArticle,
   approveComment,
   rejectComment,
+  publishQuestion,
+  rejectQuestion,
+  approveAnswer,
+  rejectAnswer,
 } from "./actions";
 import Link from "next/link";
+
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -35,7 +42,7 @@ export default async function AdminPage() {
   const { data: pendingArticles } = await supabase
     .from("articles")
     .select(
-      `id, title, slug, content_md, status, created_at, profiles:author_id (username)`
+      `id, title, slug, content_md, status, created_at, profiles:author_id (username)`,
     )
     .eq("status", "pending")
     .order("created_at", { ascending: false });
@@ -44,30 +51,41 @@ export default async function AdminPage() {
   const { data: publishedArticles } = await supabase
     .from("articles")
     .select(
-      `id, title, slug, status, created_at, profiles:author_id (username)`
+      `id, title, slug, status, created_at, profiles:author_id (username)`,
     )
     .eq("status", "published")
     .order("created_at", { ascending: false });
 
-  // 3. Commentaires en attente (requête corrigée)
-
   // 3. Commentaires en attente
-  const { data: pendingComments, error } = await supabase
+  const { data: pendingComments } = await supabase
     .from("comments")
     .select(
-      `
-    id,
-    content,
-    created_at,
-    article_id,
-    articles (id, title, slug)
-  `
+      `id, content, created_at, article_id, articles!inner (id, title, slug), profiles:author_id (username)`,
     )
     .eq("status", "pending")
     .order("created_at", { ascending: false });
 
-  console.log("PENDING COMMENTS ERROR:", error);
-  console.log("PENDING COMMENTS DATA:", pendingComments);
+  // 4. Questions en attente
+  const { data: pendingQuestions } = await supabase
+    .from("questions")
+    .select(
+      `id, title, content, slug, created_at, categories!left (name, slug), profiles:author_id (username)`,
+    )
+    .eq("status", "pending")
+    .order("created_at", { ascending: false });
+
+  // 5. Réponses en attente ← NOUVEAU
+  const { data: pendingAnswers } = await supabase
+    .from("answers")
+    .select(
+      `
+      id, content, created_at, question_id,
+      questions!inner (id, title, slug),
+      profiles:author_id (username)
+    `,
+    )
+    .eq("status", "pending")
+    .order("created_at", { ascending: false });
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -97,16 +115,14 @@ export default async function AdminPage() {
                       <p className="text-sm text-gray-500">
                         Par{" "}
                         <Link
-                          href={`/profils/${
-                            (article.profiles as any)?.username || ""
-                          }`}
+                          href={`/profils/${(article.profiles as any)?.username || ""}`}
                           className="text-blue-600 hover:underline"
                         >
                           {(article.profiles as any)?.username || "Anonyme"}
                         </Link>{" "}
                         •{" "}
                         {new Date(article.created_at).toLocaleDateString(
-                          "fr-FR"
+                          "fr-FR",
                         )}
                       </p>
                     </div>
@@ -212,9 +228,7 @@ export default async function AdminPage() {
                       <p className="text-sm text-gray-500 mb-2">
                         Sur l'article :{" "}
                         <Link
-                          href={`/articles/${
-                            (comment as any).articles?.slug || ""
-                          }`}
+                          href={`/articles/${(comment as any).articles?.slug || ""}`}
                           className="text-blue-600 hover:underline font-semibold"
                         >
                           {(comment as any).articles?.title ||
@@ -231,7 +245,7 @@ export default async function AdminPage() {
                             day: "numeric",
                             hour: "2-digit",
                             minute: "2-digit",
-                          }
+                          },
                         )}
                       </p>
                     </div>
@@ -275,6 +289,160 @@ export default async function AdminPage() {
           ) : (
             <p className="text-gray-500">
               Aucun commentaire en attente de modération.
+            </p>
+          )}
+        </section>
+
+        {/* Questions en attente */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold mb-4">
+            Questions en attente ({pendingQuestions?.length || 0})
+          </h2>
+          {pendingQuestions && pendingQuestions.length > 0 ? (
+            <div className="space-y-4">
+              {pendingQuestions.map((question) => (
+                <div
+                  key={question.id}
+                  className="bg-white rounded-lg shadow p-6"
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-xl font-semibold">
+                        {question.title}
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        Par {(question.profiles as any)?.username || "Anonyme"}{" "}
+                        •{" "}
+                        {new Date(question.created_at).toLocaleDateString(
+                          "fr-FR",
+                          { year: "numeric", month: "long", day: "numeric" },
+                        )}
+                      </p>
+                      {(question.categories as any)?.name && (
+                        <span className="inline-block bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded mt-2">
+                          {(question.categories as any).name}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <form action={publishQuestion}>
+                        <input
+                          type="hidden"
+                          name="questionId"
+                          value={question.id}
+                        />
+                        <button
+                          type="submit"
+                          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                        >
+                          Publier
+                        </button>
+                      </form>
+                      <form action={rejectQuestion}>
+                        <input
+                          type="hidden"
+                          name="questionId"
+                          value={question.id}
+                        />
+                        <button
+                          type="submit"
+                          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                        >
+                          Rejeter
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded">
+                    <p className="text-gray-700 whitespace-pre-wrap">
+                      {question.content}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500">
+              Aucune question en attente de modération.
+            </p>
+          )}
+        </section>
+
+        {/* Réponses en attente ← NOUVELLE SECTION */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold mb-4">
+            Réponses en attente ({pendingAnswers?.length || 0})
+          </h2>
+          {pendingAnswers && pendingAnswers.length > 0 ? (
+            <div className="space-y-4">
+              {pendingAnswers.map((answer) => (
+                <div key={answer.id} className="bg-white rounded-lg shadow p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <p className="text-sm text-gray-500 mb-2">
+                        Sur la question :{" "}
+                        <Link
+                          href={`/questions/${(answer as any).questions?.slug || ""}`}
+                          className="text-blue-600 hover:underline font-semibold"
+                        >
+                          {(answer as any).questions?.title ||
+                            "Question inconnue"}
+                        </Link>
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Par {(answer as any).profiles?.username || "Anonyme"} •{" "}
+                        {new Date(answer.created_at).toLocaleDateString(
+                          "fr-FR",
+                          {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          },
+                        )}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <form action={approveAnswer}>
+                        <input
+                          type="hidden"
+                          name="answerId"
+                          value={answer.id}
+                        />
+                        <button
+                          type="submit"
+                          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                        >
+                          Approuver
+                        </button>
+                      </form>
+                      <form action={rejectAnswer}>
+                        <input
+                          type="hidden"
+                          name="answerId"
+                          value={answer.id}
+                        />
+                        <button
+                          type="submit"
+                          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                        >
+                          Rejeter
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded">
+                    <p className="text-gray-700 whitespace-pre-wrap">
+                      {answer.content}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500">
+              Aucune réponse en attente de modération.
             </p>
           )}
         </section>

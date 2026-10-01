@@ -19,9 +19,9 @@ export async function updateProfil(formData: FormData) {
   const username = formData.get("username") as string;
   const bio = formData.get("bio") as string;
 
-  console.log("updateProfil - userId:", user.id);
-  console.log("updateProfil - username:", username);
-  console.log("updateProfil - bio:", bio);
+  logger.log("updateProfil - userId:", user.id);
+  logger.log("updateProfil - username:", username);
+  logger.log("updateProfil - bio:", bio);
 
   if (!username || username.trim().length < 3) {
     return {
@@ -78,7 +78,7 @@ export async function changePassword(formData: FormData) {
   const newPassword = formData.get("newPassword") as string;
   const confirmPassword = formData.get("confirmPassword") as string;
 
-  console.log("changePassword - userId:", user.id);
+  logger.log("changePassword - userId:", user.id);
 
   if (!currentPassword || !newPassword || !confirmPassword) {
     return { error: "Tous les champs sont requis" };
@@ -109,6 +109,6 @@ export async function changePassword(formData: FormData) {
     return { error: "Erreur lors du changement de mot de passe" };
   }
 
-  console.log("changePassword - success");
+  logger.log("changePassword - success");
   return { success: true };
 }

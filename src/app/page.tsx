@@ -3,6 +3,7 @@
 import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { logger } from "@/utils/logger";
 
 export const metadata: Metadata = {
   title: "Plateforme Emploi 2026 - Aide aux demandeurs d'emploi",
@@ -22,7 +23,7 @@ export default async function Home() {
     .select("id, name, slug, description")
     .order("name");
 
-  console.log("Home - categories:", categories); // Debug
+  logger.log("Home - categories:", categories); // Debug
 
   // Récupérer les articles avec leur catégorie
   const { data: articles } = await supabase
@@ -34,13 +35,19 @@ export default async function Home() {
     .order("created_at", { ascending: false })
     .limit(10);
 
-  console.log("Home - articles:", articles?.length); // Debug
+  logger.log("Home - articles:", articles?.length); // Debug
 
   return (
     <main className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm">
         <div className="max-w-4xl mx-auto p-6 flex justify-between items-center">
           <h1 className="text-2xl font-bold">Plateforme Emploi 2026</h1>
+          <nav className="flex gap-4 items-center">
+            <Link href="/questions" className="text-gray-600 hover:underline">
+              Questions
+            </Link>
+            {/* ... reste du nav */}
+          </nav>
           <nav className="flex gap-4 items-center">
             {user ? (
               <>

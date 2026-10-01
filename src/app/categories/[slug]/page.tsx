@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { logger } from "@/utils/logger"; // ← AJOUT
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
@@ -33,7 +34,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   const { slug } = await params;
   const supabase = await createClient();
 
-  console.log("CategoryPage - slug:", slug); // Debug
+  logger.log("CategoryPage - slug:", slug); // Debug
 
   const { data: category } = await supabase
     .from("categories")
@@ -42,7 +43,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     .single();
 
   if (!category) {
-    console.log("CategoryPage - category not found");
+    logger.log("CategoryPage - category not found");
     notFound();
   }
 
@@ -53,7 +54,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     .eq("status", "published")
     .order("created_at", { ascending: false });
 
-  console.log("CategoryPage - articles:", articles?.length); // Debug
+  logger.log("CategoryPage - articles:", articles?.length); // Debug
 
   return (
     <main className="min-h-screen bg-gray-50 p-8">
