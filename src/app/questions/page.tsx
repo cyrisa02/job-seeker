@@ -3,20 +3,28 @@
 import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { logger } from "@/utils/logger"; // ← AJOUT
+import QuestionsFilters from "@/components/QuestionsFilters"; // ← AJOUT
 
 export const metadata: Metadata = {
   title: "Questions de la communauté | Plateforme Emploi 2026",
   description: "Posez vos questions et trouvez des réponses de la communauté",
 };
 
-export default async function QuestionsPage() {
+interface QuestionsPageProps {
+  searchParams: Promise<{ categorie?: string; statut?: string }>;
+}
+
+export default async function QuestionsPage({
+  searchParams,
+}: QuestionsPageProps) {
+  const { categorie, statut } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: questions } = await supabase
+  // 1. Construction dynamique de la requête
+  let query = supabase
     .from("questions")
     .select(
       `
@@ -26,12 +34,21 @@ export default async function QuestionsPage() {
       answers (id, status)
     `,
     )
-    .eq("status", "published")
-    .order("created_at", { ascending: false });
+    .eq("status", "published");
 
-  logger.log("QuestionsPage - questions:", questions?.length);
+  if (categorie) {
+    query = query.eq("categories.slug", categorie);
+  }
+  if (statut === "resolue") {
+    query = query.eq("is_resolved", true);
+  } else if (statut === "ouverte") {
+    query = query.eq("is_resolved", false);
+  }
 
-  // Compter les réponses approuvées par question
+  query = query.order("created_at", { ascending: false });
+
+  const { data: questions } = await query;
+
   const questionsWithCounts =
     questions?.map((q) => ({
       ...q,
@@ -40,11 +57,19 @@ export default async function QuestionsPage() {
           .length || 0,
     })) || [];
 
+  // 2. Récupération des catégories pour le filtre
+  const { data: categories } = await supabase
+    .from("categories")
+    .select("name, slug")
+    .order("name");
+
   return (
     <main className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm">
         <div className="max-w-4xl mx-auto p-6 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Plateforme Emploi 2026</h1>
+          <Link href="/" className="text-2xl font-bold">
+            Plateforme Emploi 2026
+          </Link>
           <nav className="flex gap-4 items-center">
             <Link href="/" className="text-gray-600 hover:underline">
               Accueil
@@ -71,7 +96,7 @@ export default async function QuestionsPage() {
             <h2 className="text-3xl font-bold">Questions de la communauté</h2>
             <p className="text-gray-600 mt-2">
               {questionsWithCounts.length} question
-              {questionsWithCounts.length > 1 ? "s" : ""} posée
+              {questionsWithCounts.length > 1 ? "s" : ""} trouvée
               {questionsWithCounts.length > 1 ? "s" : ""}
             </p>
           </div>
@@ -83,12 +108,17 @@ export default async function QuestionsPage() {
           </Link>
         </div>
 
+        {/* Barre de filtres - Client Component */}
+        <QuestionsFilters categories={categories || []} />
+
+        {/* Liste des questions */}
         {questionsWithCounts.length > 0 ? (
           <div className="space-y-4">
             {questionsWithCounts.map((q) => (
-              <div
+              <Link
                 key={q.id}
-                className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow"
+                href={`/questions/${q.slug}`}
+                className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow block"
               >
                 <div className="flex items-start gap-4">
                   <div className="flex flex-col items-center min-w-[60px]">
@@ -109,20 +139,14 @@ export default async function QuestionsPage() {
                         </span>
                       )}
                       {(q.categories as any)?.slug && (
-                        <Link
-                          href={`/categories/${(q.categories as any).slug}`}
-                          className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded hover:bg-blue-200"
-                        >
+                        <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded">
                           {(q.categories as any).name}
-                        </Link>
+                        </span>
                       )}
                     </div>
-                    <Link
-                      href={`/questions/${q.slug}`}
-                      className="text-lg font-semibold text-gray-900 hover:text-blue-600 block mb-1"
-                    >
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
                       {q.title}
-                    </Link>
+                    </h3>
                     <p className="text-sm text-gray-500">
                       Par {(q.profiles as any)?.username || "Anonyme"} •{" "}
                       {new Date(q.created_at).toLocaleDateString("fr-FR", {
@@ -133,17 +157,17 @@ export default async function QuestionsPage() {
                     </p>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
             <p className="text-gray-500 mb-4">
-              Aucune question pour le moment.
+              Aucune question ne correspond à ces filtres.
             </p>
-            <p className="text-gray-400 text-sm">
-              Soyez le premier à poser une question !
-            </p>
+            <Link href="/questions" className="text-blue-600 hover:underline">
+              Voir toutes les questions
+            </Link>
           </div>
         )}
       </section>

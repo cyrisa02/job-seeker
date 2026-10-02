@@ -74,7 +74,11 @@ export default function WeeklyDigest({
             Vous recevez cet email car vous êtes inscrit à la newsletter de
             Plateforme Emploi 2026.
             <br />
-            <Link href={`${baseUrl}/newsletter/unsubscribe`} style={link}>
+            // Dans le footer du template, remplace :
+            <Link
+              href={`${baseUrl}/newsletter/unsubscribe?email=${encodeURIComponent(sub.email)}`}
+              style={{ color: "#2563eb", textDecoration: "none" }}
+            >
               Se désinscrire
             </Link>
           </Text>

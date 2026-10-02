@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
 import type { Metadata } from "next";
 import SearchBar from "@/components/SearchBar";
+import NewsletterForm from "@/components/NewsletterForm";
 import { logger } from "@/utils/logger";
 
 export const metadata: Metadata = {
@@ -23,17 +24,17 @@ export default async function Home({ searchParams }: HomeProps) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  logger.log("Home - search query:", q);
-
   // Récupérer les catégories
   const { data: categories } = await supabase
     .from("categories")
     .select("id, name, slug, description")
     .order("name");
 
-  const searchTerm = q?.trim() || "";
+  logger.log("Home - categories:", categories?.length);
 
   // Requête articles avec recherche
+  const searchTerm = q?.trim() || "";
+
   let articlesQuery = supabase
     .from("articles")
     .select(`id, title, slug, created_at, profiles:author_id (username)`)
@@ -49,53 +50,48 @@ export default async function Home({ searchParams }: HomeProps) {
 
   const { data: articles } = await articlesQuery;
 
-  // Requête questions avec recherche
-  let questionsQuery = supabase
-    .from("questions")
-    .select(
-      `id, title, slug, created_at, is_resolved, profiles:author_id (username)`,
-    )
-    .eq("status", "published")
-    .order("created_at", { ascending: false })
-    .limit(5);
-
-  if (searchTerm.length > 0) {
-    questionsQuery = questionsQuery.or(
-      `title.ilike.%${searchTerm}%,content.ilike.%${searchTerm}%`,
-    );
-  }
-
-  const { data: questions } = await questionsQuery;
-
   logger.log("Home - articles found:", articles?.length);
-  logger.log("Home - questions found:", questions?.length);
-
-  const totalResults = (articles?.length || 0) + (questions?.length || 0);
 
   return (
     <main className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-4xl mx-auto p-6 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-bold">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+          <Link href="/" className="text-xl font-bold text-gray-900">
             Plateforme Emploi 2026
           </Link>
-          <nav className="flex gap-4 items-center">
+          <nav className="flex gap-6 items-center">
+            <Link
+              href="/questions"
+              className="text-gray-600 hover:text-blue-600 transition-colors"
+            >
+              Questions
+            </Link>
+            <Link
+              href="/stats"
+              className="text-gray-600 hover:text-blue-600 transition-colors"
+            >
+              Stats
+            </Link>
             {user ? (
               <>
                 <Link
                   href="/dashboard"
-                  className="text-blue-600 hover:underline"
+                  className="text-blue-600 hover:text-blue-700 font-medium"
                 >
                   Dashboard
                 </Link>
-                <Link href="/admin" className="text-gray-600 hover:underline">
+                <Link
+                  href="/admin"
+                  className="text-gray-600 hover:text-blue-600"
+                >
                   Admin
                 </Link>
               </>
             ) : (
               <Link
                 href="/auth/login"
-                className="text-blue-600 hover:underline"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
               >
                 Se connecter
               </Link>
@@ -104,135 +100,189 @@ export default async function Home({ searchParams }: HomeProps) {
         </div>
       </header>
 
-      <section className="max-w-4xl mx-auto p-6">
-        <div className="bg-blue-600 text-white rounded-lg p-8 mb-8">
-          <h2 className="text-3xl font-bold mb-2">
+      {/* Hero */}
+      <section className="bg-gradient-to-br from-blue-600 to-blue-800 text-white">
+        <div className="max-w-6xl mx-auto px-6 py-16">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight">
             Bienvenue sur la plateforme
-          </h2>
-          <p className="text-blue-100 mb-6">
+          </h1>
+          <p className="text-blue-100 text-lg mb-8 max-w-2xl">
             Guides, astuces et témoignages pour les demandeurs d'emploi en
-            France
+            France. Une communauté bienveillante pour vous accompagner.
           </p>
-          <div className="max-w-2xl">
+          <div className="max-w-xl">
             <SearchBar />
           </div>
         </div>
+      </section>
 
+      <div className="max-w-6xl mx-auto px-6 py-12">
+        {/* Résultat de recherche */}
         {searchTerm && (
-          <div className="mb-6">
-            <h3 className="text-xl font-semibold text-gray-700">
-              {totalResults} résultat{totalResults > 1 ? "s" : ""} pour "
-              {searchTerm}"
-            </h3>
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900">
+              {articles?.length || 0} résultat
+              {(articles?.length || 0) > 1 ? "s" : ""} pour "{searchTerm}"
+            </h2>
           </div>
         )}
 
+        {/* Catégories */}
         {!searchTerm && categories && categories.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold mb-6">Explorer par thème</h2>
+          <section className="mb-16">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              Explorer par thème
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {categories.map((cat) => (
                 <Link
                   key={cat.id}
                   href={`/categories/${cat.slug}`}
-                  className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow border-l-4 border-blue-600"
+                  className="group bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-blue-300 transition-all"
                 >
-                  <h3 className="font-bold text-lg mb-2">{cat.name}</h3>
-                  <p className="text-sm text-gray-600">{cat.description}</p>
+                  <h3 className="font-bold text-lg mb-2 text-gray-900 group-hover:text-blue-600 transition-colors">
+                    {cat.name}
+                  </h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    {cat.description}
+                  </p>
                 </Link>
               ))}
             </div>
-          </div>
+          </section>
         )}
 
         {/* Articles */}
-        {articles && articles.length > 0 && (
-          <section className="mb-8">
-            <h2 className="text-2xl font-bold mb-6">
-              {searchTerm ? "Articles correspondants" : "Derniers articles"}
-            </h2>
-            <div className="grid gap-6">
+        <section className="mb-16">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            {searchTerm ? "Articles correspondants" : "Derniers articles"}
+          </h2>
+          {articles && articles.length > 0 ? (
+            <div className="grid gap-4">
               {articles.map((article) => (
-                <div
+                <Link
                   key={article.id}
-                  className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow"
+                  href={`/articles/${article.slug}`}
+                  className="group bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-blue-300 transition-all"
                 >
-                  <Link
-                    href={`/articles/${article.slug}`}
-                    className="text-xl font-semibold text-blue-600 hover:underline block mb-2"
-                  >
+                  <h3 className="text-xl font-semibold text-blue-600 mb-2 group-hover:underline">
                     {article.title}
-                  </Link>
+                  </h3>
                   <p className="text-sm text-gray-500">
-                    Par{" "}
-                    <Link
-                      href={`/profils/${(article.profiles as any)?.username || ""}`}
-                      className="text-blue-600 hover:underline"
-                    >
-                      {(article.profiles as any)?.username || "Anonyme"}
-                    </Link>{" "}
-                    •{" "}
+                    Par {(article.profiles as any)?.username || "Anonyme"} •{" "}
                     {new Date(article.created_at).toLocaleDateString("fr-FR", {
                       year: "numeric",
                       month: "long",
                       day: "numeric",
                     })}
                   </p>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Questions */}
-        {questions && questions.length > 0 && (
-          <section className="mb-8">
-            <h2 className="text-2xl font-bold mb-6">
-              {searchTerm ? "Questions correspondantes" : "Questions récentes"}
-            </h2>
-            <div className="space-y-4">
-              {questions.map((q) => (
-                <Link
-                  key={q.id}
-                  href={`/questions/${q.slug}`}
-                  className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow block"
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    {q.is_resolved && (
-                      <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded">
-                        ✓ Résolue
-                      </span>
-                    )}
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                    {q.title}
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    Par {(q.profiles as any)?.username || "Anonyme"} •{" "}
-                    {new Date(q.created_at).toLocaleDateString("fr-FR")}
-                  </p>
                 </Link>
               ))}
             </div>
+          ) : (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+              <p className="text-gray-500">
+                {searchTerm
+                  ? `Aucun résultat pour "${searchTerm}". Essayez d'autres mots-clés.`
+                  : "Aucun article publié pour le moment."}
+              </p>
+            </div>
+          )}
+        </section>
+
+        {/* Newsletter */}
+        {!searchTerm && (
+          <section className="mb-16">
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-8 md:p-12">
+              <div className="max-w-2xl mx-auto text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+                  <span className="text-3xl">📬</span>
+                </div>
+                <h2 className="text-3xl font-bold text-gray-900 mb-3">
+                  Restez informé(e)
+                </h2>
+                <p className="text-gray-600 mb-8 text-lg">
+                  Recevez chaque lundi les nouveaux articles et questions
+                  résolues de la communauté.
+                </p>
+                <div className="max-w-md mx-auto">
+                  <NewsletterForm />
+                </div>
+              </div>
+            </div>
           </section>
         )}
+      </div>
 
-        {/* Aucun résultat */}
-        {totalResults === 0 && searchTerm && (
-          <div className="bg-white rounded-lg shadow p-12 text-center text-gray-500">
-            <p className="text-lg mb-2">Aucun résultat pour "{searchTerm}"</p>
-            <p className="text-sm">
-              Essayez d'autres mots-clés ou parcourez les catégories.
-            </p>
+      {/* Footer */}
+      <footer className="bg-white border-t border-gray-200">
+        <div className="max-w-6xl mx-auto px-6 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+            <div>
+              <h3 className="font-bold text-gray-900 mb-3">
+                Plateforme Emploi 2026
+              </h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Communauté d'entraide pour les demandeurs d'emploi en France.
+                Partagez, apprenez, progressez ensemble.
+              </p>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900 mb-3">Navigation</h3>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <Link
+                    href="/questions"
+                    className="text-gray-600 hover:text-blue-600 transition-colors"
+                  >
+                    Questions de la communauté
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/stats"
+                    className="text-gray-600 hover:text-blue-600 transition-colors"
+                  >
+                    Statistiques
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900 mb-3">Légal</h3>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <Link
+                    href="/mentions-legales"
+                    className="text-gray-600 hover:text-blue-600 transition-colors"
+                  >
+                    Mentions légales
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/cgu"
+                    className="text-gray-600 hover:text-blue-600 transition-colors"
+                  >
+                    CGU
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/confidentialite"
+                    className="text-gray-600 hover:text-blue-600 transition-colors"
+                  >
+                    Politique de confidentialité
+                  </Link>
+                </li>
+              </ul>
+            </div>
           </div>
-        )}
-
-        {!searchTerm && (!articles || articles.length === 0) && (
-          <p className="text-gray-500 text-center py-12">
-            Aucun article publié pour le moment.
-          </p>
-        )}
-      </section>
+          <div className="border-t border-gray-200 pt-6 text-center text-sm text-gray-500">
+            © 2026 Plateforme Emploi 2026. Tous droits réservés.
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }
