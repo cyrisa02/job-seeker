@@ -85,3 +85,36 @@ Pourquoi ça fonctionne psychologiquement ?
     Briser la solitude : Le chômage est une épreuve isolante. Partager son vécu crée du lien.
     L'altruisme : Les gens adorent donner des conseils pour éviter aux autres de faire les mêmes erreurs qu'eux.
     La reconnaissance : C'est pour cela que nous allons bientôt coder les profils utilisateurs et le bouton "Merci". Voir que 15 personnes ont cliqué sur "Merci" pour votre conseil est une récompense sociale puissante qui incite à réécrire.
+
+
+
+---------------------------
+
+Fiche Projet : Plateforme Emploi 2026
+Objectif
+Plateforme communautaire d'entraide pour demandeurs d'emploi en France : articles, témoignages, questions/réponses modérés par la communauté. Stack : Next.js 16 + Supabase + Vercel.
+Décisions clés
+
+    UGC modéré : tout contenu (articles, questions, réponses, commentaires) passe en pending avant publication
+    RLS unifiée : fonction is_admin_or_moderator() réutilisable, policies idempotentes (DROP IF EXISTS avant CREATE)
+    Logging : logger.log (dev uniquement) pour le debug, console.log réservé aux gros bugs
+    Structure : 1 return par Server Component, requêtes AVANT le JSX
+    Catégories : jointure !left tolérante + SQL de rattrapage pour les anciens articles
+    Profils publics : bio + historique articles, noms d'auteurs cliquables
+
+État actuel (v0.1)
+✅ Auth + rôles (admin/moderator)
+✅ CRUD articles avec Markdown + catégories
+✅ Système "Merci" (toggle par utilisateur)
+✅ Commentaires modérés
+✅ Questions + réponses avec modération à 2 niveaux
+✅ Bouton "Marquer comme résolue" (auteur uniquement)
+✅ Dashboard admin avec 5 sections de modération
+✅ Profils publics + édition (bio, mot de passe)
+✅ SEO : Schema.org Article + BreadcrumbList + OpenGraph
+⚠️ Bug build Vercel : logger non importé dans src/app/api/og/route.tsx
+3 prochaines actions
+
+    Corriger le build Vercel : ajouter import { logger } from "@/utils/logger" dans route.tsx
+    Page "Poser une question" accessible aux non-connectés : rediriger vers login avec retour automatique
+    Newsletter hebdomadaire (Resend/Brevo) : récap des nouveaux articles + questions résolues → rétention
