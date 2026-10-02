@@ -69,18 +69,12 @@ export default function WeeklyDigest({
             </Section>
           )}
 
-          <Hr style={hr} />
-          <Text style={footer}>
+          <Hr style={{ borderColor: "#e6ebf1", margin: "20px 0" }} />
+          <Text
+            style={{ color: "#8898aa", fontSize: "12px", textAlign: "center" }}
+          >
             Vous recevez cet email car vous êtes inscrit à la newsletter de
             Plateforme Emploi 2026.
-            <br />
-            // Dans le footer du template, remplace :
-            <Link
-              href={`${baseUrl}/newsletter/unsubscribe?email=${encodeURIComponent(sub.email)}`}
-              style={{ color: "#2563eb", textDecoration: "none" }}
-            >
-              Se désinscrire
-            </Link>
           </Text>
         </Container>
       </Body>

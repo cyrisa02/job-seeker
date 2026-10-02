@@ -12,54 +12,47 @@ export const metadata: Metadata = {
 export default async function StatsPage() {
   const supabase = await createClient();
 
-  // 1. Compter les articles publiés
   const { count: articlesCount } = await supabase
     .from("articles")
     .select("*", { count: "exact", head: true })
     .eq("status", "published");
 
-  // 2. Compter les questions publiées
   const { count: questionsCount } = await supabase
     .from("questions")
     .select("*", { count: "exact", head: true })
     .eq("status", "published");
 
-  // 3. Compter les questions résolues
   const { count: resolvedCount } = await supabase
     .from("questions")
     .select("*", { count: "exact", head: true })
     .eq("status", "published")
     .eq("is_resolved", true);
 
-  // 4. Compter les membres (profils actifs)
   const { count: membersCount } = await supabase
     .from("profiles")
     .select("*", { count: "exact", head: true });
 
-  // 5. Compter les réponses approuvées
   const { count: answersCount } = await supabase
     .from("answers")
     .select("*", { count: "exact", head: true })
     .eq("status", "approved");
 
-  // 6. Top 5 contributeurs (par nombre d'articles publiés)
-  const { data: topContributors } = await supabase
+  // Top contributeurs - version corrigée
+  const { data: topArticles } = await supabase
     .from("articles")
     .select("author_id, profiles:author_id (username)")
-    .eq("status", "published")
-    .then((result) => {
-      // Grouper par auteur
-      const grouped = (result.data || []).reduce((acc: any, article: any) => {
-        const username = article.profiles?.username || "Anonyme";
-        acc[username] = (acc[username] || 0) + 1;
-        return acc;
-      }, {});
+    .eq("status", "published");
 
-      return Object.entries(grouped)
-        .map(([username, count]) => ({ username, count }))
-        .sort((a: any, b: any) => b.count - a.count)
-        .slice(0, 5);
-    });
+  const grouped = (topArticles || []).reduce((acc: any, article: any) => {
+    const username = article.profiles?.username || "Anonyme";
+    acc[username] = (acc[username] || 0) + 1;
+    return acc;
+  }, {});
+
+  const topContributors = Object.entries(grouped)
+    .map(([username, count]) => ({ username, count: count as number }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
 
   return (
     <main className="min-h-screen bg-gray-50 p-8">
@@ -79,7 +72,6 @@ export default async function StatsPage() {
           demandeurs d'emploi.
         </p>
 
-        {/* Cartes de statistiques */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-12">
           <div className="bg-white rounded-lg shadow p-6 text-center">
             <div className="text-4xl font-bold text-blue-600 mb-2">
@@ -122,12 +114,11 @@ export default async function StatsPage() {
           </div>
         </div>
 
-        {/* Top contributeurs */}
-        {topContributors && topContributors.length > 0 && (
+        {topContributors.length > 0 && (
           <section className="bg-white rounded-lg shadow p-8">
             <h2 className="text-2xl font-bold mb-6">Top contributeurs</h2>
             <div className="space-y-4">
-              {topContributors.map((contributor: any, index) => (
+              {topContributors.map((contributor, index: number) => (
                 <div
                   key={contributor.username}
                   className="flex items-center justify-between border-b pb-4 last:border-0"
