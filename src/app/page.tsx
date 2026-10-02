@@ -6,6 +6,13 @@ import type { Metadata } from "next";
 import SearchBar from "@/components/SearchBar";
 import NewsletterForm from "@/components/NewsletterForm";
 import { logger } from "@/utils/logger";
+import Pagination from "@/components/Pagination";
+
+const ARTICLES_PER_PAGE = 6;
+
+interface HomeProps {
+  searchParams: Promise<{ q?: string; page?: string }>;
+}
 
 export const metadata: Metadata = {
   title: "Plateforme Emploi 2026 - Aide aux demandeurs d'emploi",
@@ -13,34 +20,30 @@ export const metadata: Metadata = {
     "Guides, astuces et témoignages pour les demandeurs d'emploi en France",
 };
 
-interface HomeProps {
-  searchParams: Promise<{ q?: string }>;
-}
-
 export default async function Home({ searchParams }: HomeProps) {
-  const { q } = await searchParams;
+  const { q, page: pageParam } = await searchParams;
+  const currentPage = Math.max(1, parseInt(pageParam || "1", 10));
+  const from = (currentPage - 1) * ARTICLES_PER_PAGE;
+  const to = from + ARTICLES_PER_PAGE - 1;
+
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Récupérer les catégories
   const { data: categories } = await supabase
     .from("categories")
     .select("id, name, slug, description")
     .order("name");
 
-  logger.log("Home - categories:", categories?.length);
-
-  // Requête articles avec recherche
   const searchTerm = q?.trim() || "";
 
   let articlesQuery = supabase
     .from("articles")
-    .select(`id, title, slug, created_at, profiles:author_id (username)`)
-    .eq("status", "published")
-    .order("created_at", { ascending: false })
-    .limit(10);
+    .select(`id, title, slug, created_at, profiles:author_id (username)`, {
+      count: "exact",
+    })
+    .eq("status", "published");
 
   if (searchTerm.length > 0) {
     articlesQuery = articlesQuery.or(
@@ -48,7 +51,12 @@ export default async function Home({ searchParams }: HomeProps) {
     );
   }
 
-  const { data: articles } = await articlesQuery;
+  articlesQuery = articlesQuery
+    .order("created_at", { ascending: false })
+    .range(from, to);
+
+  const { data: articles, count: totalArticles } = await articlesQuery;
+  const totalPages = Math.ceil((totalArticles || 0) / ARTICLES_PER_PAGE);
 
   logger.log("Home - articles found:", articles?.length);
 
@@ -213,6 +221,13 @@ export default async function Home({ searchParams }: HomeProps) {
           </section>
         )}
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        basePath="/"
+        searchParams={searchTerm ? { q: searchTerm } : {}}
+      />
 
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200">

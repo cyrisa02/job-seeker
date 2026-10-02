@@ -3,7 +3,10 @@
 import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
 import type { Metadata } from "next";
-import QuestionsFilters from "@/components/QuestionsFilters"; // ← AJOUT
+import QuestionsFilters from "@/components/QuestionsFilters";
+import Pagination from "@/components/Pagination";
+
+const QUESTIONS_PER_PAGE = 10;
 
 export const metadata: Metadata = {
   title: "Questions de la communauté | Plateforme Emploi 2026",
@@ -11,28 +14,35 @@ export const metadata: Metadata = {
 };
 
 interface QuestionsPageProps {
-  searchParams: Promise<{ categorie?: string; statut?: string }>;
+  searchParams: Promise<{
+    categorie?: string;
+    statut?: string;
+    page?: string;
+  }>;
 }
 
 export default async function QuestionsPage({
   searchParams,
 }: QuestionsPageProps) {
-  const { categorie, statut } = await searchParams;
+  const { categorie, statut, page: pageParam } = await searchParams;
+  const currentPage = Math.max(1, parseInt(pageParam || "1", 10));
+  const from = (currentPage - 1) * QUESTIONS_PER_PAGE;
+  const to = from + QUESTIONS_PER_PAGE - 1;
+
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // 1. Construction dynamique de la requête
+  // 1. Construction dynamique de la requête avec count
   let query = supabase
     .from("questions")
     .select(
-      `
-      id, title, slug, is_resolved, created_at,
-      categories!left (name, slug),
-      profiles:author_id (username),
-      answers (id, status)
-    `,
+      `id, title, slug, is_resolved, created_at,
+       categories!left (name, slug),
+       profiles:author_id (username),
+       answers (id, status)`,
+      { count: "exact" },
     )
     .eq("status", "published");
 
@@ -45,9 +55,11 @@ export default async function QuestionsPage({
     query = query.eq("is_resolved", false);
   }
 
-  query = query.order("created_at", { ascending: false });
+  query = query.order("created_at", { ascending: false }).range(from, to);
 
-  const { data: questions } = await query;
+  const { data: questions, count: totalQuestions } = await query;
+
+  const totalPages = Math.ceil((totalQuestions || 0) / QUESTIONS_PER_PAGE);
 
   const questionsWithCounts =
     questions?.map((q) => ({
@@ -57,11 +69,16 @@ export default async function QuestionsPage({
           .length || 0,
     })) || [];
 
-  // 2. Récupération des catégories pour le filtre
+  // 2. Catégories pour les filtres
   const { data: categories } = await supabase
     .from("categories")
     .select("name, slug")
     .order("name");
+
+  // Params à conserver dans la pagination (exclure "page")
+  const filterParams: Record<string, string> = {};
+  if (categorie) filterParams.categorie = categorie;
+  if (statut) filterParams.statut = statut;
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -95,9 +112,8 @@ export default async function QuestionsPage({
           <div>
             <h2 className="text-3xl font-bold">Questions de la communauté</h2>
             <p className="text-gray-600 mt-2">
-              {questionsWithCounts.length} question
-              {questionsWithCounts.length > 1 ? "s" : ""} trouvée
-              {questionsWithCounts.length > 1 ? "s" : ""}
+              {totalQuestions || 0} question
+              {(totalQuestions || 0) > 1 ? "s" : ""} au total
             </p>
           </div>
           <Link
@@ -108,10 +124,8 @@ export default async function QuestionsPage({
           </Link>
         </div>
 
-        {/* Barre de filtres - Client Component */}
         <QuestionsFilters categories={categories || []} />
 
-        {/* Liste des questions */}
         {questionsWithCounts.length > 0 ? (
           <div className="space-y-4">
             {questionsWithCounts.map((q) => (
@@ -123,7 +137,9 @@ export default async function QuestionsPage({
                 <div className="flex items-start gap-4">
                   <div className="flex flex-col items-center min-w-[60px]">
                     <span
-                      className={`text-2xl font-bold ${q.is_resolved ? "text-green-600" : "text-gray-400"}`}
+                      className={`text-2xl font-bold ${
+                        q.is_resolved ? "text-green-600" : "text-gray-400"
+                      }`}
                     >
                       {q.answersCount}
                     </span>
@@ -170,6 +186,13 @@ export default async function QuestionsPage({
             </Link>
           </div>
         )}
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          basePath="/questions"
+          searchParams={filterParams}
+        />
       </section>
     </main>
   );
