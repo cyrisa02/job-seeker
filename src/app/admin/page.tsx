@@ -11,17 +11,22 @@ import {
   rejectQuestion,
   approveAnswer,
   rejectAnswer,
+  resolveReport,
+  dismissReport,
 } from "./actions";
 import Link from "next/link";
+import ConfirmForm from "@/components/ConfirmForm";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function AdminPage() {
   const supabase = await createClient();
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
   if (!user) redirect("/auth/login");
 
   const { data: profile } = await supabase
@@ -74,24 +79,56 @@ export default async function AdminPage() {
     .eq("status", "pending")
     .order("created_at", { ascending: false });
 
-  // 5. Réponses en attente ← NOUVEAU
+  // 5. Réponses en attente
   const { data: pendingAnswers } = await supabase
     .from("answers")
     .select(
-      `
-      id, content, created_at, question_id,
-      questions!inner (id, title, slug),
-      profiles:author_id (username)
-    `,
+      `id, content, created_at, question_id, questions!inner (id, title, slug), profiles:author_id (username)`,
     )
     .eq("status", "pending")
     .order("created_at", { ascending: false });
+
+  // 6. Signalements en attente (sans jointure pour éviter les problèmes RLS)
+  const { data: reports, error: reportsError } = await supabase
+    .from("reports")
+    .select("*")
+    .eq("status", "pending")
+    .order("created_at", { ascending: false });
+
+  if (reportsError) {
+    console.error("Erreur récupération reports:", reportsError);
+  }
+
+  // Récupérer les reporters séparément
+  const reporterIds = reports?.map((r) => r.reporter_id) || [];
+  const { data: reporters } =
+    reporterIds.length > 0
+      ? await supabase
+          .from("profiles")
+          .select("id, username")
+          .in("id", reporterIds)
+      : { data: [] };
+
+  const reportsWithReporter =
+    reports?.map((r) => ({
+      ...r,
+      reporter: reporters?.find((p) => p.id === r.reporter_id) || {
+        username: "Anonyme",
+      },
+    })) || [];
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Administration</h1>
+          <h1 className="text-3xl font-bold mb-6">
+            Administration
+            {reportsWithReporter.length > 0 && (
+              <span className="ml-3 inline-flex items-center justify-center w-8 h-8 bg-red-600 text-white text-sm font-bold rounded-full">
+                {reportsWithReporter.length}
+              </span>
+            )}
+          </h1>
           <Link href="/dashboard" className="text-blue-600 hover:underline">
             ← Retour au dashboard
           </Link>
@@ -315,7 +352,11 @@ export default async function AdminPage() {
                         •{" "}
                         {new Date(question.created_at).toLocaleDateString(
                           "fr-FR",
-                          { year: "numeric", month: "long", day: "numeric" },
+                          {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          },
                         )}
                       </p>
                       {(question.categories as any)?.name && (
@@ -368,7 +409,7 @@ export default async function AdminPage() {
           )}
         </section>
 
-        {/* Réponses en attente ← NOUVELLE SECTION */}
+        {/* Réponses en attente */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-4">
             Réponses en attente ({pendingAnswers?.length || 0})
@@ -443,6 +484,82 @@ export default async function AdminPage() {
           ) : (
             <p className="text-gray-500">
               Aucune réponse en attente de modération.
+            </p>
+          )}
+        </section>
+
+        {/* Signalements en attente */}
+        <section className="bg-white rounded-lg shadow p-6 mb-8">
+          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+            🚩 Signalements ({reportsWithReporter.length})
+          </h2>
+          {reportsWithReporter.length > 0 ? (
+            <div className="space-y-4">
+              {reportsWithReporter.map((report) => (
+                <div
+                  key={report.id}
+                  className="border border-red-200 bg-red-50 rounded-lg p-4"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <span className="inline-block bg-red-200 text-red-800 text-xs font-medium px-2 py-1 rounded mb-2">
+                        {report.content_type === "article"
+                          ? " Article"
+                          : report.content_type === "question"
+                            ? "❓ Question"
+                            : "💬 Réponse"}
+                      </span>
+                      <p className="text-sm text-gray-700">
+                        <strong>Motif :</strong> {report.reason}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Signalé par {report.reporter.username} •{" "}
+                        {new Date(report.created_at).toLocaleDateString(
+                          "fr-FR",
+                          {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          },
+                        )}
+                      </p>
+                    </div>
+                    <code className="text-xs bg-gray-100 px-2 py-1 rounded">
+                      {report.content_id.slice(0, 8)}...
+                    </code>
+                  </div>
+                  <div className="flex gap-2">
+                    <ConfirmForm
+                      action={resolveReport}
+                      message="Supprimer ce contenu définitivement ?"
+                    >
+                      <input type="hidden" name="reportId" value={report.id} />
+                      <input type="hidden" name="action" value="delete" />
+                      <button
+                        type="submit"
+                        className="bg-red-600 text-white text-sm px-3 py-1.5 rounded hover:bg-red-700"
+                      >
+                        🗑 Supprimer le contenu
+                      </button>
+                    </ConfirmForm>
+                    <form action={dismissReport}>
+                      <input type="hidden" name="reportId" value={report.id} />
+                      <button
+                        type="submit"
+                        className="bg-gray-200 text-gray-700 text-sm px-3 py-1.5 rounded hover:bg-gray-300"
+                      >
+                        ✗ Ignorer
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-center py-4">
+              Aucun signalement en attente.
             </p>
           )}
         </section>

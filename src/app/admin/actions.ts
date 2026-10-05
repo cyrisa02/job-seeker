@@ -287,4 +287,78 @@ export async function rejectAnswer(formData: FormData): Promise<void> {
   revalidatePath("/admin");
 }
 
-// ... (garder toutes les fonctions existantes)
+// src/app/admin/actions.ts
+
+// ... imports existants
+
+export async function resolveReport(formData: FormData): Promise<void> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.role !== "admin" && profile?.role !== "moderator") return;
+
+  const reportId = formData.get("reportId") as string;
+  const action = formData.get("action") as string; // "delete" ou "dismiss"
+
+  // Récupérer le signalement
+  const { data: report } = await supabase
+    .from("reports")
+    .select("*")
+    .eq("id", reportId)
+    .single();
+
+  if (!report) return;
+
+  if (action === "delete") {
+    // Supprimer le contenu signalé selon son type
+    if (report.content_type === "article") {
+      await supabase.from("articles").delete().eq("id", report.content_id);
+    } else if (report.content_type === "question") {
+      await supabase.from("questions").delete().eq("id", report.content_id);
+    } else if (report.content_type === "answer") {
+      await supabase.from("answers").delete().eq("id", report.content_id);
+    }
+  }
+
+  // Marquer le signalement comme résolu
+  await supabase
+    .from("reports")
+    .update({ status: "resolved" })
+    .eq("id", reportId);
+
+  revalidatePath("/admin");
+}
+
+export async function dismissReport(formData: FormData): Promise<void> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.role !== "admin" && profile?.role !== "moderator") return;
+
+  const reportId = formData.get("reportId") as string;
+
+  await supabase
+    .from("reports")
+    .update({ status: "dismissed" })
+    .eq("id", reportId);
+
+  revalidatePath("/admin");
+}

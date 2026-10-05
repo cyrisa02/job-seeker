@@ -10,6 +10,7 @@ import ThanksButton from "@/components/ThanksButton";
 import ShareButtons from "@/components/ShareButtons";
 import BadgesDisplay from "@/components/BadgesDisplay";
 import { getUserBadges } from "@/utils/badges";
+import ReportButton from "@/components/ReportButton";
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;
@@ -161,6 +162,25 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
         <header className="mb-8">
           <h1 className="text-4xl font-bold mb-4">{article.title}</h1>
+          // ... dans le JSX, près du titre ou des métadonnées de l'article :
+          <div className="flex items-center justify-between mt-4">
+            <div className="text-sm text-gray-500">
+              Par{" "}
+              <Link
+                href={`/profils/${authorName}`}
+                className="font-semibold text-blue-600 hover:underline"
+              >
+                {authorName}
+              </Link>
+              {" • "}
+              {new Date(article.created_at).toLocaleDateString("fr-FR")}
+            </div>
+            <ReportButton
+              contentType="article"
+              contentId={article.id}
+              isSignedIn={!!user}
+            />
+          </div>
           <div className="text-gray-600">
             Par{" "}
             <Link

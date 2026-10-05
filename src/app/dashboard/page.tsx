@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import ArticleForm from "@/components/ArticleForm";
 import LogoutButton from "@/components/LogoutButton";
 import Link from "next/link"; // ← à ajouter si pas déjà présent
+import { logout } from "@/app/auth/actions";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -54,18 +55,28 @@ export default async function DashboardPage() {
             </div>
             <div className="flex gap-4 items-center">
               <Link
+                href="/"
+                className="text-blue-600 hover:underline font-medium"
+              >
+                ← Accueil
+              </Link>
+              <Link
                 href="/dashboard/profil"
-                className="text-blue-600 hover:underline text-sm font-medium"
+                className="text-gray-600 hover:underline"
               >
                 Mon profil
               </Link>
               <Link
-                href={`/profils/${profile?.username || ""}`}
-                className="text-gray-600 hover:underline text-sm"
+                href={`/profils/${profile?.username}`}
+                className="text-gray-600 hover:underline"
               >
                 Voir mon profil public
               </Link>
-              <LogoutButton />
+              <form action={logout}>
+                <button type="submit" className="text-red-600 hover:underline">
+                  Se déconnecter
+                </button>
+              </form>
             </div>
           </div>
         </div>

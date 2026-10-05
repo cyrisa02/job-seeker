@@ -6,6 +6,7 @@ import Link from "next/link";
 import AnswerForm from "@/components/AnswerForm";
 import AnswerLikeButton from "@/components/AnswerLikeButton";
 import type { Metadata } from "next";
+import ReportButton from "@/components/ReportButton";
 
 interface QuestionPageProps {
   params: Promise<{ slug: string }>;
@@ -119,6 +120,29 @@ export default async function QuestionPage({ params }: QuestionPageProps) {
 
           <h1 className="text-3xl font-bold mb-4">{question.title}</h1>
 
+          <div className="flex items-center justify-between mt-4 border-t pt-4">
+            <div className="text-sm text-gray-500">
+              Posée par{" "}
+              <Link
+                href={`/profils/${(question.profiles as any)?.username || ""}`}
+                className="font-semibold text-blue-600 hover:underline"
+              >
+                {(question.profiles as any)?.username || "Anonyme"}
+              </Link>
+              {" • "}
+              {new Date(question.created_at).toLocaleDateString("fr-FR", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </div>
+            <ReportButton
+              contentType="question"
+              contentId={question.id}
+              isSignedIn={!!user}
+            />
+          </div>
+
           <div className="prose max-w-none mb-6">
             <p className="text-gray-700 whitespace-pre-wrap">
               {question.content}
@@ -186,7 +210,8 @@ export default async function QuestionPage({ params }: QuestionPageProps) {
                   <p className="text-gray-700 whitespace-pre-wrap mb-4">
                     {answer.content}
                   </p>
-                  <div className="flex items-center justify-between">
+
+                  <div className="flex items-center justify-between flex-wrap gap-2">
                     <div className="text-sm text-gray-500">
                       Réponse de{" "}
                       <Link
@@ -198,12 +223,19 @@ export default async function QuestionPage({ params }: QuestionPageProps) {
                       •{" "}
                       {new Date(answer.created_at).toLocaleDateString("fr-FR")}
                     </div>
-                    <AnswerLikeButton
-                      answerId={answer.id}
-                      userId={user?.id || null}
-                      initialCount={answer.likeCount}
-                      hasLiked={answer.hasLiked}
-                    />
+                    <div className="flex items-center gap-3">
+                      <AnswerLikeButton
+                        answerId={answer.id}
+                        userId={user?.id || null}
+                        initialCount={answer.likeCount}
+                        hasLiked={answer.hasLiked}
+                      />
+                      <ReportButton
+                        contentType="answer"
+                        contentId={answer.id}
+                        isSignedIn={!!user}
+                      />
+                    </div>
                   </div>
                 </div>
               ))}
