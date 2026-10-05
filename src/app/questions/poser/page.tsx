@@ -75,6 +75,18 @@ export default async function AskQuestionPage() {
 
         <div className="bg-white rounded-lg shadow p-8">
           <h1 className="text-3xl font-bold mb-2">Poser une question</h1>
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+            <p className="text-sm text-gray-700">
+              💡 <strong>Nouveau sur la plateforme ?</strong>{" "}
+              <Link
+                href="/questions/guide"
+                className="text-blue-600 hover:underline font-medium"
+              >
+                Lisez notre guide pour bien poser votre question
+              </Link>{" "}
+              et obtenir des réponses utiles rapidement.
+            </p>
+          </div>
           <p className="text-gray-600 mb-8">
             Partagez votre question avec la communauté. Elle sera publiée après
             modération.

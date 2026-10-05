@@ -116,12 +116,20 @@ export default async function QuestionsPage({
               {(totalQuestions || 0) > 1 ? "s" : ""} au total
             </p>
           </div>
-          <Link
-            href="/questions/poser"
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-          >
-            Poser une question
-          </Link>
+          <div className="flex gap-4 items-center">
+            <Link
+              href="/questions/guide"
+              className="text-gray-600 hover:text-blue-600 transition-colors text-sm flex items-center gap-1"
+            >
+              📖 Guide
+            </Link>
+            <Link
+              href={user ? "/questions/poser" : "/auth/login"}
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            >
+              Poser une question
+            </Link>
+          </div>
         </div>
 
         <QuestionsFilters categories={categories || []} />

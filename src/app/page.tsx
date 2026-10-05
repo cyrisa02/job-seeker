@@ -75,6 +75,24 @@ export default async function Home({ searchParams }: HomeProps) {
           </Link>
           <nav className="flex gap-4 items-center">
             <Link
+              href="/articles"
+              className="text-gray-600 hover:text-blue-600 transition-colors"
+            >
+              Articles
+            </Link>
+            <Link
+              href="/questions"
+              className="text-gray-600 hover:text-blue-600 transition-colors"
+            >
+              Questions
+            </Link>
+            <Link
+              href="/stats"
+              className="text-gray-600 hover:text-blue-600 transition-colors"
+            >
+              Stats
+            </Link>
+            <Link
               href="/questions"
               className="text-gray-600 hover:text-blue-600 transition-colors"
             >
@@ -131,8 +149,17 @@ export default async function Home({ searchParams }: HomeProps) {
             Guides, astuces et témoignages pour les demandeurs d'emploi en
             France. Une communauté bienveillante pour vous accompagner.
           </p>
+
           <div className="max-w-xl">
             <SearchBar />
+          </div>
+          <div className="mt-6">
+            <Link
+              href="/questions/guide"
+              className="text-blue-200 hover:text-white text-sm underline"
+            >
+              📖 Comment bien poser sa question
+            </Link>
           </div>
         </div>
       </section>
