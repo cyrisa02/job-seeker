@@ -85,7 +85,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const authorName = (article.profiles as any)?.username || "Anonyme";
 
   // Après avoir récupéré l'article, ajoute :
-  const authorBadges = await getUserBadges(article.author_id);
+  const authorBadges = await getUserBadges((article as any).author_id);
 
   // Dans le JSX, après le nom de l'auteur :
   <div className="flex items-center gap-2 flex-wrap">

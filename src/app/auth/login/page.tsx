@@ -9,11 +9,15 @@ export const metadata: Metadata = {
 };
 
 interface LoginPageProps {
-  searchParams: Promise<{ redirect?: string; error?: string }>;
+  searchParams: Promise<{
+    redirect?: string;
+    error?: string;
+    success?: string;
+  }>;
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const { redirect, error } = await searchParams;
+  const { redirect, error, success } = await searchParams;
   const redirectUrl = redirect || "/dashboard";
 
   return (
@@ -26,14 +30,19 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded mb-4 text-sm">
-            {error === "CredentialsSignin"
+            {error === "Invalid login credentials"
               ? "Email ou mot de passe incorrect."
               : "Une erreur est survenue."}
           </div>
         )}
 
+        {success === "account_created" && (
+          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-2 rounded mb-4 text-sm">
+            ✓ Compte créé avec succès ! Connectez-vous.
+          </div>
+        )}
+
         <form className="flex flex-col gap-4" action={signIn}>
-          {/* Champ hidden pour la redirection */}
           <input type="hidden" name="redirect" value={redirectUrl} />
 
           <div>
