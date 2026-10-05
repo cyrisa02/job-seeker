@@ -21,9 +21,17 @@ export async function generateMetadata({
   const { slug } = await params;
   const supabase = await createClient();
 
+  // src/app/articles/[slug]/page.tsx
+
+  // Ligne ~45, remplace la requête par :
   const { data: article } = await supabase
     .from("articles")
-    .select("title, content_md, created_at, profiles:author_id(username)")
+    .select(
+      `
+  id, title, content_md, created_at, category_id, author_id,
+  profiles:author_id (id, username)
+`,
+    )
     .eq("slug", slug)
     .eq("status", "published")
     .single();

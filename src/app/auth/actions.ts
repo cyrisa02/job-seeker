@@ -1,3 +1,5 @@
+// src/app/auth/actions.ts
+
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
@@ -6,38 +8,26 @@ import { redirect } from "next/navigation";
 export async function signIn(formData: FormData) {
   const supabase = await createClient();
 
-  const data = {
-    email: formData.get("email") as string,
-    password: formData.get("password") as string,
-  };
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
+  const redirectTo = formData.get("redirect") as string; // ← NOUVEAU
 
-  const { error } = await supabase.auth.signInWithPassword(data);
-
-  if (error) {
-    redirect(`/auth/login?error=${encodeURIComponent(error.message)}`);
-  }
-
-  redirect("/dashboard");
-}
-
-export async function signUp(formData: FormData) {
-  const supabase = await createClient();
-
-  const data = {
-    email: formData.get("email") as string,
-    password: formData.get("password") as string,
-  };
-
-  const { error } = await supabase.auth.signUp(data);
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
   if (error) {
-    redirect(`/auth/signup?error=${encodeURIComponent(error.message)}`);
+    // En cas d'erreur, on renvoie vers le login avec le paramètre error
+    redirect(
+      `/auth/login?error=${error.message}&redirect=${encodeURIComponent(redirectTo)}`,
+    );
   }
 
-  // Redirection vers une page de confirmation d'email
-  redirect("/auth/confirm");
+  // Succès : redirection vers l'URL demandée (ou /dashboard par défaut)
+  redirect(redirectTo || "/dashboard");
 }
-
+// ✅ AJOUTE CETTE FONCTION
 export async function logout() {
   const supabase = await createClient();
   await supabase.auth.signOut();

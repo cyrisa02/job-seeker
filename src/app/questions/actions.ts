@@ -4,17 +4,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
-import { logger } from "@/utils/logger"; // ← AJOUT
-
-function generateSlug(title: string): string {
-  return title
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "")
-    .substring(0, 80);
-}
+import { logger } from "@/utils/logger";
 
 export async function submitQuestion(formData: FormData) {
   const supabase = await createClient();
@@ -22,9 +12,8 @@ export async function submitQuestion(formData: FormData) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
   if (!user) {
-    return { error: "Vous devez être connecté" };
+    return { error: "Vous devez être connecté pour poser une question" };
   }
 
   const title = formData.get("title") as string;
@@ -32,45 +21,43 @@ export async function submitQuestion(formData: FormData) {
   const categoryId = formData.get("categoryId") as string;
 
   logger.log("submitQuestion - title:", title);
-  logger.log("submitQuestion - categoryId:", categoryId);
 
-  if (!title || title.trim().length < 10) {
-    return { error: "Le titre doit contenir au moins 10 caractères" };
-  }
-  if (!content || content.trim().length < 30) {
-    return { error: "Le contenu doit contenir au moins 30 caractères" };
-  }
-  if (!categoryId) {
-    return { error: "Veuillez choisir une catégorie" };
+  if (!title || title.trim().length < 5) {
+    return { error: "Le titre doit contenir au moins 5 caractères" };
   }
 
-  let slug = generateSlug(title);
-
-  const { data: existing } = await supabase
-    .from("questions")
-    .select("slug")
-    .eq("slug", slug)
-    .single();
-
-  if (existing) {
-    slug = `${slug}-${Date.now()}`;
+  if (!content || content.trim().length < 20) {
+    return { error: "La description doit contenir au moins 20 caractères" };
   }
+
+  if (content.length > 2000) {
+    return { error: "La description ne peut pas dépasser 2000 caractères" };
+  }
+
+  // Générer un slug à partir du titre
+  const slug = title
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .substring(0, 100);
 
   const { error } = await supabase.from("questions").insert({
     title: title.trim(),
     content: content.trim(),
     slug,
-    category_id: categoryId,
+    category_id: categoryId || null,
     author_id: user.id,
     status: "pending",
+    is_resolved: false,
   });
 
   if (error) {
-    console.error("Erreur submitQuestion:", error);
-    return { error: "Erreur lors de la soumission" };
+    logger.error("Erreur submitQuestion:", error);
+    return { error: "Erreur lors de la soumission de la question" };
   }
 
   revalidatePath("/questions");
-  revalidatePath("/admin");
   return { success: true };
 }
