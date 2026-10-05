@@ -39,6 +39,8 @@ export default async function Home({ searchParams }: HomeProps) {
 
   const searchTerm = q?.trim() || "";
 
+  // Remplace le bloc de recherche articles par :
+
   let articlesQuery = supabase
     .from("articles")
     .select(`id, title, slug, created_at, profiles:author_id (username)`, {
@@ -47,9 +49,11 @@ export default async function Home({ searchParams }: HomeProps) {
     .eq("status", "published");
 
   if (searchTerm.length > 0) {
-    articlesQuery = articlesQuery.or(
-      `title.ilike.%${searchTerm}%,content_md.ilike.%${searchTerm}%`,
-    );
+    // Utiliser la recherche full-text au lieu de ILIKE
+    articlesQuery = articlesQuery.textSearch("search_vector", searchTerm, {
+      type: "websearch", // supporte les opérateurs : "phrase exacte", OR, -exclusion
+      config: "french",
+    });
   }
 
   articlesQuery = articlesQuery
