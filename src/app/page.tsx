@@ -7,6 +7,7 @@ import SearchBar from "@/components/SearchBar";
 import NewsletterForm from "@/components/NewsletterForm";
 import { logger } from "@/utils/logger";
 import Pagination from "@/components/Pagination";
+import { logout } from "@/app/auth/actions";
 
 const ARTICLES_PER_PAGE = 6;
 
@@ -68,7 +69,7 @@ export default async function Home({ searchParams }: HomeProps) {
           <Link href="/" className="text-xl font-bold text-gray-900">
             Plateforme Emploi 2026
           </Link>
-          <nav className="flex gap-6 items-center">
+          <nav className="flex gap-4 items-center">
             <Link
               href="/questions"
               className="text-gray-600 hover:text-blue-600 transition-colors"
@@ -95,6 +96,14 @@ export default async function Home({ searchParams }: HomeProps) {
                 >
                   Admin
                 </Link>
+                <form action={logout}>
+                  <button
+                    type="submit"
+                    className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-medium text-sm"
+                  >
+                    Se déconnecter
+                  </button>
+                </form>
               </>
             ) : (
               <Link

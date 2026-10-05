@@ -37,3 +37,9 @@ export async function signUp(formData: FormData) {
   // Redirection vers une page de confirmation d'email
   redirect("/auth/confirm");
 }
+
+export async function logout() {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect("/");
+}
