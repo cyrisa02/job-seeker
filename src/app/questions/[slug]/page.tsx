@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import AnswerForm from "@/components/AnswerForm";
+import AnswerLikeButton from "@/components/AnswerLikeButton";
 import type { Metadata } from "next";
 
 interface QuestionPageProps {
@@ -38,41 +39,55 @@ export default async function QuestionPage({ params }: QuestionPageProps) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  console.log("QuestionPage - slug:", slug);
-
   // 1. Récupérer la question
   const { data: question } = await supabase
     .from("questions")
     .select(
       `
-    id, title, content, slug, is_resolved, created_at, author_id,
-    categories!left (name, slug),
-    profiles:author_id (id, username)
-  `,
+      id, title, content, slug, is_resolved, created_at, author_id,
+      categories!left (name, slug),
+      profiles:author_id (id, username)
+    `,
     )
     .eq("slug", slug)
     .eq("status", "published")
     .single();
 
   if (!question) {
-    console.log("QuestionPage - not found");
     notFound();
   }
 
-  // 2. Récupérer les réponses approuvées
+  // 2. Récupérer les réponses approuvées AVEC les likes
   const { data: answers } = await supabase
     .from("answers")
     .select(
       `
       id, content, created_at,
-      profiles:author_id (username)
+      profiles:author_id (username, id),
+      answer_likes (user_id)
     `,
     )
     .eq("question_id", question.id)
     .eq("status", "approved")
     .order("created_at", { ascending: true });
 
-  console.log("QuestionPage - answers:", answers?.length);
+  // Enrichir avec le compteur et le statut de like, puis trier
+  const answersWithLikes = (answers || [])
+    .map((answer) => {
+      const likes = (answer.answer_likes as any[]) || [];
+      return {
+        ...answer,
+        likeCount: likes.length,
+        hasLiked: user ? likes.some((l) => l.user_id === user.id) : false,
+      };
+    })
+    .sort((a, b) => {
+      // Tri : plus likées d'abord, puis chronologique
+      if (b.likeCount !== a.likeCount) return b.likeCount - a.likeCount;
+      return (
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
+    });
 
   return (
     <main className="min-h-screen bg-gray-50 p-8">
@@ -83,37 +98,6 @@ export default async function QuestionPage({ params }: QuestionPageProps) {
         >
           ← Retour aux questions
         </Link>
-
-        {/* Bouton Marquer comme résolue */}
-        {user?.id === question.author_id && (
-          <div className="bg-white rounded-lg shadow p-4 mb-6 flex items-center justify-between">
-            <span className="text-sm text-gray-600">
-              {question.is_resolved
-                ? "Cette question est résolue"
-                : "Votre question a-t-elle trouvé sa réponse ?"}
-            </span>
-            <form
-              action={async () => {
-                "use server";
-                const { toggleResolved } = await import("./actions");
-                await toggleResolved(question.id);
-              }}
-            >
-              <button
-                type="submit"
-                className={`px-4 py-2 rounded text-sm font-medium ${
-                  question.is_resolved
-                    ? "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                    : "bg-green-600 text-white hover:bg-green-700"
-                }`}
-              >
-                {question.is_resolved
-                  ? "Rouvrir la question"
-                  : "✓ Marquer comme résolue"}
-              </button>
-            </form>
-          </div>
-        )}
 
         {/* Question */}
         <article className="bg-white rounded-lg shadow p-8 mb-8">
@@ -158,28 +142,68 @@ export default async function QuestionPage({ params }: QuestionPageProps) {
           </div>
         </article>
 
+        {/* Bouton Marquer comme résolue */}
+        {user?.id === question.author_id && (
+          <div className="bg-white rounded-lg shadow p-4 mb-6 flex items-center justify-between">
+            <span className="text-sm text-gray-600">
+              {question.is_resolved
+                ? "Cette question est résolue"
+                : "Votre question a-t-elle trouvé sa réponse ?"}
+            </span>
+            <form
+              action={async () => {
+                "use server";
+                const { toggleResolved } = await import("./actions");
+                await toggleResolved(question.id);
+              }}
+            >
+              <button
+                type="submit"
+                className={`px-4 py-2 rounded text-sm font-medium ${
+                  question.is_resolved
+                    ? "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    : "bg-green-600 text-white hover:bg-green-700"
+                }`}
+              >
+                {question.is_resolved
+                  ? "Rouvrir la question"
+                  : "✓ Marquer comme résolue"}
+              </button>
+            </form>
+          </div>
+        )}
+
         {/* Réponses */}
         <section className="mb-8">
           <h2 className="text-2xl font-bold mb-6">
-            Réponses ({answers?.length || 0})
+            Réponses ({answersWithLikes.length})
           </h2>
 
-          {answers && answers.length > 0 ? (
+          {answersWithLikes.length > 0 ? (
             <div className="space-y-4">
-              {answers.map((answer) => (
+              {answersWithLikes.map((answer) => (
                 <div key={answer.id} className="bg-white rounded-lg shadow p-6">
                   <p className="text-gray-700 whitespace-pre-wrap mb-4">
                     {answer.content}
                   </p>
-                  <div className="text-sm text-gray-500">
-                    Réponse de{" "}
-                    <Link
-                      href={`/profils/${(answer.profiles as any)?.username || ""}`}
-                      className="text-blue-600 hover:underline font-medium"
-                    >
-                      {(answer.profiles as any)?.username || "Anonyme"}
-                    </Link>{" "}
-                    • {new Date(answer.created_at).toLocaleDateString("fr-FR")}
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-500">
+                      Réponse de{" "}
+                      <Link
+                        href={`/profils/${(answer.profiles as any)?.username || ""}`}
+                        className="text-blue-600 hover:underline font-medium"
+                      >
+                        {(answer.profiles as any)?.username || "Anonyme"}
+                      </Link>{" "}
+                      •{" "}
+                      {new Date(answer.created_at).toLocaleDateString("fr-FR")}
+                    </div>
+                    <AnswerLikeButton
+                      answerId={answer.id}
+                      userId={user?.id || null}
+                      initialCount={answer.likeCount}
+                      hasLiked={answer.hasLiked}
+                    />
                   </div>
                 </div>
               ))}

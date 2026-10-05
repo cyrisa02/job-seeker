@@ -8,6 +8,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import ThanksButton from "@/components/ThanksButton";
 import ShareButtons from "@/components/ShareButtons";
+import BadgesDisplay from "@/components/BadgesDisplay";
+import { getUserBadges } from "@/utils/badges";
 
 interface ArticlePageProps {
   params: Promise<{ slug: string }>;
@@ -73,6 +75,20 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   if (!article) notFound();
 
   const authorName = (article.profiles as any)?.username || "Anonyme";
+
+  // Après avoir récupéré l'article, ajoute :
+  const authorBadges = await getUserBadges(article.author_id);
+
+  // Dans le JSX, après le nom de l'auteur :
+  <div className="flex items-center gap-2 flex-wrap">
+    <Link
+      href={`/profils/${authorName}`}
+      className="font-semibold text-blue-600 hover:underline"
+    >
+      {authorName}
+    </Link>
+    {authorBadges.length > 0 && <BadgesDisplay badges={authorBadges} compact />}
+  </div>;
 
   // 2. Récupérer les Merci
   const { data: thanks } = await supabase

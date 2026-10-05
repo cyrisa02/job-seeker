@@ -78,3 +78,46 @@ export async function toggleResolved(questionId: string) {
   revalidatePath(`/questions/${questionId}`);
   return { success: true, isResolved: !question.is_resolved };
 }
+
+// src/app/questions/[slug]/actions.ts
+
+export async function toggleAnswerLike(answerId: string) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Non authentifié" };
+
+  // Vérifier si déjà liké
+  const { data: existing } = await supabase
+    .from("answer_likes")
+    .select("id")
+    .eq("answer_id", answerId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (existing) {
+    // Retirer le like
+    await supabase.from("answer_likes").delete().eq("id", existing.id);
+
+    const { count } = await supabase
+      .from("answer_likes")
+      .select("*", { count: "exact", head: true })
+      .eq("answer_id", answerId);
+
+    return { success: true, hasLiked: false, count: count || 0 };
+  } else {
+    // Ajouter le like
+    await supabase
+      .from("answer_likes")
+      .insert({ answer_id: answerId, user_id: user.id });
+
+    const { count } = await supabase
+      .from("answer_likes")
+      .select("*", { count: "exact", head: true })
+      .eq("answer_id", answerId);
+
+    return { success: true, hasLiked: true, count: count || 0 };
+  }
+}
