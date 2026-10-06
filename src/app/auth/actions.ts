@@ -70,3 +70,26 @@ export async function logout() {
   await supabase.auth.signOut();
   redirect("/");
 }
+
+export async function requestPasswordReset(formData: FormData) {
+  const supabase = await createClient();
+
+  const email = formData.get("email") as string;
+
+  if (!email) {
+    redirect("/auth/forgot-password?error=Email requis");
+  }
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || "https://allie-emploi.vercel.app"}/auth/reset-password`,
+  });
+
+  if (error) {
+    redirect(
+      `/auth/forgot-password?error=${encodeURIComponent(error.message)}`,
+    );
+  }
+
+  // Toujours rediriger vers succès (pour ne pas révéler quels emails existent)
+  redirect("/auth/forgot-password?success=email_sent");
+}

@@ -48,6 +48,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </div>
         )}
 
+        {success === "password_updated" && (
+          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-2 rounded mb-4 text-sm">
+            ✓ Mot de passe modifié avec succès ! Connectez-vous.
+          </div>
+        )}
+
         <form className="flex flex-col gap-4" action={signIn}>
           <input type="hidden" name="redirect" value={redirectUrl} />
 
@@ -87,6 +93,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             Se connecter
           </button>
         </form>
+        <div className="mt-4 text-center text-sm">
+          <Link
+            href="/auth/forgot-password"
+            className="text-blue-600 hover:underline"
+          >
+            Mot de passe oublié ?
+          </Link>
+        </div>
 
         <div className="mt-6 text-center text-sm text-gray-600">
           Pas encore de compte ?{" "}
