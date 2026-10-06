@@ -28,6 +28,36 @@ export async function signIn(formData: FormData) {
 }
 
 export async function signUp(formData: FormData) {
+  export async function signUp(formData: FormData) {
+    const supabase = await createClient();
+
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || "https://allie-emploi.vercel.app"}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      redirect(`/auth/register?error=${encodeURIComponent(error.message)}`);
+    }
+
+    // Créer le profil
+    if (data.user) {
+      await supabase.from("profiles").insert({
+        id: data.user.id,
+        username: email.split("@")[0],
+        email: email,
+      });
+    }
+
+    // Rediriger vers la page d'inscription avec le message de succès
+    redirect("/auth/register?success=confirmation_sent");
+  }
   const supabase = await createClient();
 
   const email = formData.get("email") as string;
@@ -63,7 +93,7 @@ export async function signUp(formData: FormData) {
   }
 
   // Redirection vers login avec message de succès
-  redirect("/auth/login?success=account_created");
+  redirect("/auth/register?success=confirmation_sent");
 }
 
 export async function logout() {
