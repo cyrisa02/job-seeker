@@ -8,6 +8,7 @@ import Pagination from "@/components/Pagination";
 import { logout } from "@/app/auth/actions";
 import type { Metadata } from "next";
 import Image from "next/image";
+import Navbar from "@/components/NavBar";
 
 const ARTICLES_PER_PAGE = 6;
 
@@ -85,60 +86,9 @@ export default async function Home({ searchParams }: HomeProps) {
   return (
     <main className="min-h-screen">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="text-xl font-bold text-gray-900">
-            Allié Emploi
-          </Link>
-          <nav className="flex gap-6 items-center">
-            <Link
-              href="/articles"
-              className="text-gray-600 hover:text-blue-600 transition-colors"
-            >
-              Articles
-            </Link>
-            <Link
-              href="/questions"
-              className="text-gray-600 hover:text-blue-600 transition-colors"
-            >
-              Questions
-            </Link>
-            <Link
-              href="/stats"
-              className="text-gray-600 hover:text-blue-600 transition-colors"
-            >
-              Stats
-            </Link>
-            {user ? (
-              <>
-                <Link
-                  href="/dashboard"
-                  className="text-blue-600 hover:text-blue-700 font-medium"
-                >
-                  Dashboard
-                </Link>
-                <form action={logout}>
-                  <button
-                    type="submit"
-                    className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-medium text-sm"
-                  >
-                    Se déconnecter
-                  </button>
-                </form>
-              </>
-            ) : (
-              <Link
-                href="/auth/login"
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-              >
-                Se connecter
-              </Link>
-            )}
-          </nav>
-        </div>
-      </header>
-
+      <Navbar user={user} />
       {/* Hero */}
+
       <section className="bg-gradient-to-br from-blue-600 to-blue-800 text-white py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-5xl font-bold mb-6">
@@ -149,6 +99,21 @@ export default async function Home({ searchParams }: HomeProps) {
             France. Une communauté bienveillante pour vous accompagner.
           </p>
           <SearchBar />
+
+          {/* CTA Poser une question */}
+          <div className="mt-8">
+            <Link
+              href="/questions/poser"
+              className="inline-flex items-center gap-2 bg-white text-blue-600 px-8 py-4 rounded-lg hover:bg-blue-50 transition-colors font-semibold text-lg shadow-lg"
+            >
+              <span>💬</span>
+              <span>Poser une question à la communauté</span>
+            </Link>
+            <p className="text-blue-200 text-sm mt-3">
+              Obtenez des réponses de personnes qui comprennent votre situation
+            </p>
+          </div>
+
           <div className="mt-8">
             <Link
               href="/questions/guide"

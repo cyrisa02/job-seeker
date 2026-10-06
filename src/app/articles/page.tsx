@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import ArticlesFilters from "@/components/ArticlesFilters";
 import Pagination from "@/components/Pagination";
+import Navbar from "@/components/NavBar";
 
 const ARTICLES_PER_PAGE = 10;
 
@@ -85,47 +86,7 @@ export default async function ArticlesPage({
 
   return (
     <main className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="text-xl font-bold text-gray-900">
-            Allié Emploi
-          </Link>
-          <nav className="flex gap-6 items-center">
-            <Link href="/articles" className="text-blue-600 font-medium">
-              Articles
-            </Link>
-            <Link
-              href="/questions"
-              className="text-gray-600 hover:text-blue-600 transition-colors"
-            >
-              Questions
-            </Link>
-            <Link
-              href="/stats"
-              className="text-gray-600 hover:text-blue-600 transition-colors"
-            >
-              Stats
-            </Link>
-            {user ? (
-              <>
-                <Link
-                  href="/dashboard"
-                  className="text-blue-600 hover:text-blue-700 font-medium"
-                >
-                  Dashboard
-                </Link>
-              </>
-            ) : (
-              <Link
-                href="/auth/login"
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-              >
-                Se connecter
-              </Link>
-            )}
-          </nav>
-        </div>
-      </header>
+      <Navbar user={user} currentPage="articles" />
 
       <section className="max-w-6xl mx-auto px-6 py-12">
         <div className="mb-8">

@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import QuestionsFilters from "@/components/QuestionsFilters";
 import Pagination from "@/components/Pagination";
+import Navbar from "@/components/NavBar";
 
 const QUESTIONS_PER_PAGE = 10;
 
@@ -90,30 +91,7 @@ export default async function QuestionsPage({
 
   return (
     <main className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-4xl mx-auto p-6 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-bold">
-            Allié Emploi
-          </Link>
-          <nav className="flex gap-4 items-center">
-            <Link href="/" className="text-gray-600 hover:underline">
-              Accueil
-            </Link>
-            {user ? (
-              <Link href="/dashboard" className="text-blue-600 hover:underline">
-                Dashboard
-              </Link>
-            ) : (
-              <Link
-                href="/auth/login"
-                className="text-blue-600 hover:underline"
-              >
-                Se connecter
-              </Link>
-            )}
-          </nav>
-        </div>
-      </header>
+      <Navbar user={user} currentPage="questions" />
 
       <section className="max-w-4xl mx-auto p-6">
         <div className="flex justify-between items-center mb-8">

@@ -118,3 +118,49 @@ Décisions clés
     Corriger le build Vercel : ajouter import { logger } from "@/utils/logger" dans route.tsx
     Page "Poser une question" accessible aux non-connectés : rediriger vers login avec retour automatique
     Newsletter hebdomadaire (Resend/Brevo) : récap des nouveaux articles + questions résolues → rétention
+
+
+
+Nvelles idées
+
+C'est une excellente stratégie. Pour une agence de consulting IA, le meilleur argument de vente n'est pas un discours, mais un produit fonctionnel que le client peut toucher du doigt. 
+Puisque tu maîtrises désormais parfaitement la stack Next.js + Supabase + Server Actions + Automatisation (Resend), voici 3 idées de projets "showcase" de même envergure technique, mais conçus spécifiquement pour attirer des clients B2B (PME, artisans, indépendants).
+Idée 1 : "DevisFlow IA" – Le pré-qualificateur et générateur de devis pour artisans
+La cible : Plombiers, électriciens, paysagistes, artisans du bâtiment qui perdent des clients parce qu'ils ne répondent pas au téléphone ou mettent 3 jours à faire un devis.
+
+    Le problème métier : Un client envoie un message vague ("Fuite sous l'évier, urgence"). L'artisan doit rappeler, poser 10 questions, puis rédiger le devis. C'est une perte de temps énorme.
+    La solution technique (Ton showcase) :
+        Un formulaire web simple (Next.js) où le client décrit son problème (ou upload une photo).
+        L'IA (Le "Wow") : Un agent IA (via API OpenAI/Mistral) analyse le texte/photo, extrait les entités (type de panne, urgence, localisation), et génère automatiquement un brouillon de devis structuré dans Supabase avec une fourchette de prix estimative.
+        Automatisation : Envoi immédiat d'un SMS/Email au client : "Merci, nous avons bien reçu votre demande. Voici une estimation préliminaire. Un artisan vous rappelle sous 2h." + Notification push à l'artisan.
+    Pourquoi ça vend ton agence : Tu montres que l'IA ne fait pas que du "blabla", elle structure des données non structurées et fait gagner 5h par semaine à un artisan.
+
+Idée 2 : "MemoBot PME" – Base de connaissances interne avec RAG (Retrieval-Augmented Generation)
+La cible : PME de 10 à 50 salariés avec un turnover, ou des processus complexes (ex: un cabinet comptable, une petite usine, une agence immobilière).
+
+    Le problème métier : Le patron répond 20 fois par jour aux mêmes questions ("Comment on déclare un arrêt maladie ?", "Quel est le code promo fournisseur X ?", "Quelle est la procédure de sécurité ?").
+    La solution technique (Ton showcase) :
+        Un dashboard Admin (Next.js) où le patron upload des PDF, des Word ou colle des liens (procédures internes).
+        L'IA (Le "Wow") : Le système découpe ces documents, crée des "embeddings" (vecteurs) et les stocke dans Supabase (ou pgvector). Un chatbot interne permet aux employés de poser des questions en langage naturel. L'IA va chercher uniquement dans les documents de l'entreprise pour répondre, avec des sources citées.
+        Sécurité : Authentification Supabase stricte (RLS) pour que seuls les employés connectés puissent interroger la base.
+    Pourquoi ça vend ton agence : Le RAG est LA compétence IA la plus demandée en B2B actuellement. Tu prouves que tu sais sécuriser les données de l'entreprise (elles ne partent pas pour entraîner un modèle public) et créer un outil productif.
+
+Idée 3 : "LocalRank AI" – Générateur de pages SEO locales pour réseaux de franchises
+La cible : Une entreprise qui a 10 à 50 points de vente (ex: un réseau de salons de coiffure, d'auto-écoles, ou de restaurants) et qui veut être visible sur "Auto-école [Nom de la ville]".
+
+    Le problème métier : Créer 50 pages web uniques et optimisées SEO pour 50 villes différentes est un cauchemar logistique et coûte cher en rédaction.
+    La solution technique (Ton showcase) :
+        Une base de données Supabase avec une "Master Page" (texte générique) et une table "Villes" (nom, spécificités locales, adresse, horaires).
+        L'IA (Le "Wow") : Un script (ou une Server Action) qui, pour chaque ville, demande à l'IA de générer une page web unique, naturelle et optimisée SEO en croisant le texte maître et les données locales.
+        Next.js : Utilisation du Static Site Generation (SSG) ou ISR pour générer ces pages instantanément avec des métadonnées dynamiques (titre, description) parfaites pour Google.
+    Pourquoi ça vend ton agence : Tu parles directement le langage du ROI (Retour sur Investissement). Plus de visibilité locale = plus de clients en magasin. C'est un argument commercial imparable.
+
+Mon conseil pour choisir
+Vu ton profil (ingénieur mécanique, prof de maths, rigoureux) et ton envie de monter une agence IA sérieuse, l'Idée 2 (MemoBot PME / RAG) est techniquement la plus valorisante. 
+Pourquoi ?
+
+    Elle utilise des concepts IA avancés (Embeddings, Vector Search) que 90% des "agences IA" qui font juste des prompts ChatGPT ne maîtrisent pas.
+    Elle est facilement "produitisable" : tu peux la vendre sous forme d'abonnement SaaS (ex: 99€/mois) à plusieurs PME.
+    Elle est parfaitement sécurisable avec les compétences Supabase (RLS) que tu viens d'acquérir sur Allié Emploi.
+
+Quelle direction t'inspire le plus ? Si l'une d'elles te plaît, je peux te rédiger la spécification technique complète (schéma de base de données, stack exacte, étapes de développement) ou même la copie de la landing page pour ton agence.
