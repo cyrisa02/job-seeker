@@ -5,16 +5,6 @@
 import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Désinscription newsletter | Allié Emploi",
-  description: "Gérez votre abonnement à la newsletter Allié Emploi.",
-  robots: {
-    index: false,
-    follow: false,
-  },
-};
 
 function UnsubscribeForm() {
   const searchParams = useSearchParams();
