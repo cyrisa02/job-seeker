@@ -16,8 +16,8 @@ export async function generateMetadata({
 }: ProfilePageProps): Promise<Metadata> {
   const { username } = await params;
   return {
-    title: `Profil de ${username} | Plateforme Emploi 2026`,
-    description: `Articles et contributions de ${username}`,
+    title: `Profil de ${username} | Allié Emploi`,
+    description: `Articles, questions et contributions de ${username} sur Allié Emploi.`,
   };
 }
 

@@ -1,4 +1,15 @@
 import { signUp } from "../actions";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Inscription | Allié Emploi",
+  description:
+    "Créez votre compte Allié Emploi gratuitement et rejoignez la communauté d'entraide pour demandeurs d'emploi.",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default function SignupPage() {
   return (

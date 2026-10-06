@@ -4,9 +4,10 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Comment bien poser sa question | Plateforme Emploi 2026",
+  title: "Comment bien poser sa question | Allié Emploi",
   description:
-    "Guide pour formuler une question claire et obtenir des réponses utiles",
+    "Guide complet pour formuler une question claire et obtenir des réponses utiles de la communauté Allié Emploi. Exemples et conseils pratiques.",
+  keywords: ["guide", "poser question", "conseils", "communauté", "entraide"],
 };
 
 export default function GuidePage() {

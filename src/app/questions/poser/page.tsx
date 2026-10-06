@@ -6,8 +6,10 @@ import AskQuestionForm from "@/components/AskQuestionForm";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Poser une question | Plateforme Emploi 2026",
-  description: "Partagez votre question avec la communauté",
+  title: "Poser une question | Allié Emploi",
+  description:
+    "Partagez votre question avec la communauté Allié Emploi et recevez des conseils de personnes qui comprennent votre situation.",
+  keywords: ["poser question", "communauté", "aide", "conseils"],
 };
 
 export default async function AskQuestionPage() {

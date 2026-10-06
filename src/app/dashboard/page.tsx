@@ -6,6 +6,17 @@ import ArticleForm from "@/components/ArticleForm";
 import LogoutButton from "@/components/LogoutButton";
 import Link from "next/link"; // ← à ajouter si pas déjà présent
 import { logout } from "@/app/auth/actions";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Dashboard | Allié Emploi",
+  description:
+    "Gérez vos articles, questions et contributions sur Allié Emploi.",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default async function DashboardPage() {
   const supabase = await createClient();

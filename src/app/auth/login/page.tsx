@@ -5,7 +5,13 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Connexion | Plateforme Emploi 2026",
+  title: "Connexion | Allié Emploi",
+  description:
+    "Connectez-vous à votre compte Allié Emploi pour accéder à votre dashboard et participer à la communauté.",
+  robots: {
+    index: false, // Page de connexion : ne pas indexer
+    follow: false,
+  },
 };
 
 interface LoginPageProps {

@@ -9,8 +9,16 @@ import Pagination from "@/components/Pagination";
 const QUESTIONS_PER_PAGE = 10;
 
 export const metadata: Metadata = {
-  title: "Questions de la communauté | Plateforme Emploi 2026",
-  description: "Posez vos questions et trouvez des réponses de la communauté",
+  title: "Questions de la communauté | Allié Emploi",
+  description:
+    "Posez vos questions sur l'emploi et le chômage, ou consultez celles de la communauté. Rupture conventionnelle, ARE, RSA, recherche d'emploi...",
+  keywords: [
+    "questions emploi",
+    "entraide chômage",
+    "rupture conventionnelle",
+    "droits chômage",
+    "communauté demandeurs emploi",
+  ],
 };
 
 interface QuestionsPageProps {
@@ -85,7 +93,7 @@ export default async function QuestionsPage({
       <header className="bg-white shadow-sm">
         <div className="max-w-4xl mx-auto p-6 flex justify-between items-center">
           <Link href="/" className="text-2xl font-bold">
-            Plateforme Emploi 2026
+            Allié Emploi
           </Link>
           <nav className="flex gap-4 items-center">
             <Link href="/" className="text-gray-600 hover:underline">

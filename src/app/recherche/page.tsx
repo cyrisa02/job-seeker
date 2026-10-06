@@ -4,10 +4,29 @@ import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
 import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Recherche | Plateforme Emploi 2026",
-  description: "Rechercher dans les articles et questions",
-};
+interface SearchPageProps {
+  searchParams: Promise<{ q?: string; type?: string; page?: string }>;
+}
+
+export async function generateMetadata({
+  searchParams,
+}: SearchPageProps): Promise<Metadata> {
+  const { q } = await searchParams;
+  const query = q?.trim() || "";
+
+  if (query) {
+    return {
+      title: `Recherche "${query}" | Allié Emploi`,
+      description: `Résultats de recherche pour "${query}" sur Allié Emploi : articles, questions et guides sur l'emploi et le chômage.`,
+    };
+  }
+
+  return {
+    title: "Recherche | Allié Emploi",
+    description:
+      "Recherchez dans tous les articles et questions de la communauté Allié Emploi.",
+  };
+}
 
 interface SearchPageProps {
   searchParams: Promise<{ q?: string; type?: string; page?: string }>;

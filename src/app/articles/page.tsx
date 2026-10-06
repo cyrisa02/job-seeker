@@ -9,9 +9,16 @@ import Pagination from "@/components/Pagination";
 const ARTICLES_PER_PAGE = 10;
 
 export const metadata: Metadata = {
-  title: "Articles | Plateforme Emploi 2026",
+  title: "Articles - Guides et conseils emploi | Allié Emploi",
   description:
-    "Guides, astuces et témoignages pour les demandeurs d'emploi en France",
+    "Parcourez tous nos articles sur le chômage, les droits, le CV, les entretiens et la reconversion professionnelle. Filtrez par catégorie.",
+  keywords: [
+    "articles emploi",
+    "guide chômage",
+    "droits ARE",
+    "conseils CV",
+    "reconversion professionnelle",
+  ],
 };
 
 interface ArticlesPageProps {
@@ -81,7 +88,7 @@ export default async function ArticlesPage({
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
           <Link href="/" className="text-xl font-bold text-gray-900">
-            Plateforme Emploi 2026
+            Allié Emploi
           </Link>
           <nav className="flex gap-6 items-center">
             <Link href="/articles" className="text-blue-600 font-medium">
@@ -188,7 +195,7 @@ export default async function ArticlesPage({
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 mt-12">
         <div className="max-w-6xl mx-auto px-6 py-8 text-center text-sm text-gray-500">
-          © 2026 Plateforme Emploi 2026. Tous droits réservés.
+          © 2026 Allié Emploi. Tous droits réservés.
         </div>
       </footer>
     </main>

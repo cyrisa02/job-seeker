@@ -5,8 +5,10 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Statistiques | Plateforme Emploi 2026",
-  description: "Découvrez les chiffres de notre communauté d'entraide",
+  title: "Statistiques de la communauté | Allié Emploi",
+  description:
+    "Découvrez les chiffres de la communauté Allié Emploi : nombre d'articles, questions résolues, membres actifs et contributions.",
+  keywords: ["statistiques", "communauté", "chiffres", "membres actifs"],
 };
 
 export default async function StatsPage() {

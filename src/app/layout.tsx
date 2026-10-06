@@ -3,11 +3,11 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+    process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
   ),
   title: {
-    default: "Plateforme Emploi 2026 - Aide aux demandeurs d'emploi",
-    template: "%s | Plateforme Emploi 2026",
+    default: "Allié Emploi - Aide aux demandeurs d'emploi",
+    template: "%s | Allié Emploi",
   },
   description:
     "Guides, astuces et témoignages pour les demandeurs d'emploi en France. Droits, allocations, CV, formation, reconversion.",
@@ -20,11 +20,11 @@ export const metadata: Metadata = {
     "reconversion",
     "formation CPF",
   ],
-  authors: [{ name: "Plateforme Emploi 2026" }],
+  authors: [{ name: "Allié Emploi" }],
   openGraph: {
     type: "website",
     locale: "fr_FR",
-    siteName: "Plateforme Emploi 2026",
+    siteName: "Allié Emploi",
   },
   robots: {
     index: true,
