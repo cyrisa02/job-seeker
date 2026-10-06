@@ -28,62 +28,31 @@ export async function signIn(formData: FormData) {
 }
 
 export async function signUp(formData: FormData) {
-  export async function signUp(formData: FormData) {
-    const supabase = await createClient();
-
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || "https://allie-emploi.vercel.app"}/auth/callback`,
-      },
-    });
-
-    if (error) {
-      redirect(`/auth/register?error=${encodeURIComponent(error.message)}`);
-    }
-
-    // Créer le profil
-    if (data.user) {
-      await supabase.from("profiles").insert({
-        id: data.user.id,
-        username: email.split("@")[0],
-        email: email,
-      });
-    }
-
-    // Rediriger vers la page d'inscription avec le message de succès
-    redirect("/auth/register?success=confirmation_sent");
-  }
   const supabase = await createClient();
 
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
-  const username = formData.get("username") as string;
 
-  logger.log("signUp - email:", email, "username:", username);
+  logger.log("signUp - email:", email);
 
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      data: { username },
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || "https://allie-emploi.vercel.app"}/auth/callback`,
     },
   });
 
   if (error) {
     logger.error("Erreur signUp:", error);
-    redirect(`/auth/register?error=${error.message}`);
+    redirect(`/auth/register?error=${encodeURIComponent(error.message)}`);
   }
 
-  // Créer le profil dans la table public.profiles
+  // Créer le profil
   if (data.user) {
     const { error: profileError } = await supabase.from("profiles").insert({
       id: data.user.id,
-      username: username || email.split("@")[0],
+      username: email.split("@")[0],
       email: email,
     });
 
@@ -92,7 +61,7 @@ export async function signUp(formData: FormData) {
     }
   }
 
-  // Redirection vers login avec message de succès
+  // Rediriger vers la page d'inscription avec le message de succès
   redirect("/auth/register?success=confirmation_sent");
 }
 
